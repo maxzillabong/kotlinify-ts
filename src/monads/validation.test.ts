@@ -5,8 +5,6 @@ import {
   Right,
   NonEmptyList,
   zipOrAccumulate,
-  zipOrAccumulate3,
-  zipOrAccumulate4,
   mapOrAccumulate,
 } from './index'
 
@@ -86,13 +84,13 @@ describe('Validation', () => {
     })
   })
 
-  describe('zipOrAccumulate3', () => {
+  describe('zipOrAccumulate with 3 args', () => {
     it('should combine three successful Eithers', () => {
       const a = Right<string, number>(1)
       const b = Right<string, number>(2)
       const c = Right<string, number>(3)
 
-      const result = zipOrAccumulate3(a, b, c)
+      const result = zipOrAccumulate(a, b, c)
 
       expect(result.isRight).toBe(true)
       expect(result.getRight()).toEqual([1, 2, 3])
@@ -103,7 +101,7 @@ describe('Validation', () => {
       const b = Left<string, number>('error2')
       const c = Left<string, number>('error3')
 
-      const result = zipOrAccumulate3(a, b, c)
+      const result = zipOrAccumulate(a, b, c)
 
       expect(result.isLeft).toBe(true)
       const errors = result.getLeft()
@@ -116,7 +114,7 @@ describe('Validation', () => {
       const b = Left<string, number>('error2')
       const c = Left<string, number>('error3')
 
-      const result = zipOrAccumulate3(a, b, c)
+      const result = zipOrAccumulate(a, b, c)
 
       expect(result.isLeft).toBe(true)
       const errors = result.getLeft()
@@ -125,14 +123,14 @@ describe('Validation', () => {
     })
   })
 
-  describe('zipOrAccumulate4', () => {
+  describe('zipOrAccumulate with 4 args', () => {
     it('should combine four successful Eithers', () => {
       const a = Right<string, number>(1)
       const b = Right<string, number>(2)
       const c = Right<string, number>(3)
       const d = Right<string, number>(4)
 
-      const result = zipOrAccumulate4(a, b, c, d)
+      const result = zipOrAccumulate(a, b, c, d)
 
       expect(result.isRight).toBe(true)
       expect(result.getRight()).toEqual([1, 2, 3, 4])
@@ -144,7 +142,7 @@ describe('Validation', () => {
       const c = Left<string, number>('error3')
       const d = Left<string, number>('error4')
 
-      const result = zipOrAccumulate4(a, b, c, d)
+      const result = zipOrAccumulate(a, b, c, d)
 
       expect(result.isLeft).toBe(true)
       const errors = result.getLeft()
@@ -251,7 +249,7 @@ describe('Validation', () => {
       const validateForm = (
         form: FormData
       ): Either<NonEmptyList<string>, [string, string, string]> =>
-        zipOrAccumulate3(
+        zipOrAccumulate(
           validateUsername(form.username),
           validateEmail(form.email),
           validatePassword(form.password)
@@ -296,7 +294,7 @@ describe('Validation', () => {
       const validateRequest = (
         request: ApiRequest
       ): Either<NonEmptyList<string>, [string, string, unknown]> =>
-        zipOrAccumulate3(
+        zipOrAccumulate(
           validateEndpoint(request.endpoint),
           validateMethod(request.method),
           validateBody(request.body)

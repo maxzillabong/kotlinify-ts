@@ -424,7 +424,7 @@ describe('integration', () => {
 
     await delay(10)
     job.cancel()
-    await delay(110)
+    await job.join().catch(() => {})
 
     expect(executed).not.toHaveBeenCalled()
     expect(cancelled).toHaveBeenCalled()

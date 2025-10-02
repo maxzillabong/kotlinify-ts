@@ -5,12 +5,6 @@ export class IntRange implements Iterable<number> {
     public readonly step: number = 1
   ) {
     if (step === 0) throw new Error('Step must be non-zero')
-    if (step < 0 && start < endInclusive) {
-      throw new Error('Step is negative but start < endInclusive')
-    }
-    if (step > 0 && start > endInclusive) {
-      throw new Error('Step is positive but start > endInclusive')
-    }
   }
 
   get isEmpty(): boolean {

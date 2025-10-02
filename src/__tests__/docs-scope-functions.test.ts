@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import '../index' // Import main package to enable prototype extensions
+import { asScope } from '../scope'
 import { let as letValue, apply, also, run, withValue } from '../scope'
 
 describe('Documentation Examples - Scope Functions', () => {
@@ -10,9 +10,10 @@ describe('Documentation Examples - Scope Functions', () => {
     })
 
     it('prototype chaining', () => {
-      const transformed = (5)
+      const transformed = asScope(5)
         .let(x => x * 2)
         .let(x => x.toString())
+        .value()
 
       expect(transformed).toBe('10')
     })
@@ -20,10 +21,11 @@ describe('Documentation Examples - Scope Functions', () => {
     it('chain with other scope functions', () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-      const processed = letValue({ x: 5 }, obj => obj.x)
+      const processed = asScope(letValue({ x: 5 }, obj => obj.x))
         .let(x => x * 2)
         .also(x => console.log('Value:', x))
         .let(x => x + 10)
+        .value()
 
       expect(processed).toBe(20)
       expect(consoleSpy).toHaveBeenCalledWith('Value:', 10)
@@ -45,12 +47,13 @@ describe('Documentation Examples - Scope Functions', () => {
     it('prototype chaining', () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-      const user = { name: 'John' }
+      const user = asScope({ name: 'John' })
         .apply(u => {
           u.age = 30
           u.email = 'john@example.com'
         })
         .also(u => console.log('Created:', u.name))
+        .value()
 
       expect(user).toEqual({
         name: 'John',

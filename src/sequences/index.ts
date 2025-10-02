@@ -68,9 +68,11 @@ export class Sequence<T> {
     const source = this.iterator
     return new Sequence(function* () {
       let taken = 0
-      for (const item of { [Symbol.iterator]: source }) {
-        if (taken >= count) break
-        yield item
+      const iterator = source()
+      while (taken < count) {
+        const next = iterator.next()
+        if (next.done) break
+        yield next.value
         taken++
       }
     })

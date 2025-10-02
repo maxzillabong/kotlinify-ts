@@ -108,21 +108,20 @@ export class Flow<T> {
     return new Flow(async (collector) => {
       let lastValue: T | undefined
       let hasValue = false
-      let timer: NodeJS.Timeout | undefined
 
       await this.collect(async (value) => {
         lastValue = value
         hasValue = true
-        if (timer) clearTimeout(timer)
-        timer = setTimeout(async () => {
-          if (hasValue && lastValue !== undefined) {
-            await collector.emit(lastValue)
-            hasValue = false
-          }
-        }, timeoutMs)
       })
 
-      if (timer) clearTimeout(timer)
+      if (hasValue && lastValue !== undefined) {
+        await new Promise<void>((resolve) => {
+          setTimeout(async () => {
+            await collector.emit(lastValue!)
+            resolve()
+          }, timeoutMs)
+        })
+      }
     })
   }
 

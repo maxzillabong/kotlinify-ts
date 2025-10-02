@@ -1,3 +1,7 @@
+const nativePadStart = String.prototype.padStart
+const nativePadEnd = String.prototype.padEnd
+const nativeRepeat = String.prototype.repeat
+
 export function trimIndent(str: string): string {
   const lines = str.split('\n')
 
@@ -13,7 +17,10 @@ export function trimIndent(str: string): string {
   )
 
   return lines
-    .map(line => (line.length >= minIndent ? line.slice(minIndent) : line))
+    .map(line => {
+      if (line.trim().length === 0) return ''
+      return line.length >= minIndent ? line.slice(minIndent) : line
+    })
     .join('\n')
 }
 
@@ -30,22 +37,20 @@ export function trimMargin(str: string, marginPrefix: string = '|'): string {
 }
 
 export function padStart(str: string, length: number, padChar: string = ' '): string {
-  if (str.length >= length) return str
-  const padLength = length - str.length
-  return padChar.repeat(Math.ceil(padLength / padChar.length)).slice(0, padLength) + str
+  return nativePadStart.call(str, length, padChar)
 }
 
 export function padEnd(str: string, length: number, padChar: string = ' '): string {
-  if (str.length >= length) return str
-  const padLength = length - str.length
-  return str + padChar.repeat(Math.ceil(padLength / padChar.length)).slice(0, padLength)
+  return nativePadEnd.call(str, length, padChar)
 }
 
 export function removePrefix(str: string, prefix: string): string {
+  if (prefix.length === 0) return str
   return str.startsWith(prefix) ? str.slice(prefix.length) : str
 }
 
 export function removeSuffix(str: string, suffix: string): string {
+  if (suffix.length === 0) return str
   return str.endsWith(suffix) ? str.slice(0, -suffix.length) : str
 }
 
@@ -70,11 +75,11 @@ export function decapitalize(str: string): string {
 }
 
 export function repeat(str: string, count: number): string {
-  return str.repeat(count)
+  return nativeRepeat.call(str, count)
 }
 
 export function lines(str: string): string[] {
-  return str.split(/\r?\n/)
+  return str.split(/\r\n|\r|\n/)
 }
 
 export function reversed(str: string): string {
@@ -176,15 +181,6 @@ Object.defineProperty(String.prototype, 'capitalize', {
 Object.defineProperty(String.prototype, 'decapitalize', {
   value: function (this: string): string {
     return decapitalize(this)
-  },
-  writable: true,
-  configurable: true,
-  enumerable: false,
-})
-
-Object.defineProperty(String.prototype, 'repeat', {
-  value: function (this: string, count: number): string {
-    return repeat(this, count)
   },
   writable: true,
   configurable: true,

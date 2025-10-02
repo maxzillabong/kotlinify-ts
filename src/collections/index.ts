@@ -1,3 +1,6 @@
+// Save native methods before we override them
+const nativeReduceRight = Array.prototype.reduceRight
+
 export function flatten<T>(array: readonly (T | readonly T[])[]): T[] {
   return array.flat() as T[]
 }
@@ -39,12 +42,12 @@ export function reduce<T>(array: readonly T[], operation: (acc: T, value: T) => 
 }
 
 export function foldRight<T, R>(array: readonly T[], initial: R, operation: (value: T, acc: R) => R): R {
-  return array.reduceRight((acc, value) => operation(value, acc), initial)
+  return nativeReduceRight.call(array, (acc, value) => operation(value, acc), initial)
 }
 
 export function reduceRight<T>(array: readonly T[], operation: (value: T, acc: T) => T): T {
   if (array.length === 0) throw new Error('Array is empty')
-  return array.reduceRight((acc, value) => operation(value, acc))
+  return nativeReduceRight.call(array, (acc, value) => operation(value, acc))
 }
 
 export function runningFold<T, R>(array: readonly T[], initial: R, operation: (acc: R, value: T) => R): R[] {
@@ -64,7 +67,7 @@ export function runningReduce<T>(array: readonly T[], operation: (acc: T, value:
     const next = operation(acc, value)
     result.push(next)
     return next
-  })
+  }, array[0])
   return result
 }
 
