@@ -168,7 +168,7 @@ const job2 = launch(function() {
             A Job that produces a value - like a Promise with cancellation support.
           </p>
           <CodeBlock
-            code={`import { async, Deferred } from 'kotlinify-ts/coroutines';
+            code={`import { asyncValue as async, Deferred } from 'kotlinify-ts/coroutines';
 
 // async returns a Deferred<T>
 const deferred: Deferred<number> = async(async () => {
@@ -221,7 +221,7 @@ await scope.joinAll();`}
           description="Start concurrent operations with automatic lifecycle management"
         >
           <CodeBlock
-            code={`import { launch, async, delay } from 'kotlinify-ts/coroutines';
+            code={`import { launch, asyncValue as async, delay } from 'kotlinify-ts/coroutines';
 
 // launch: Fire-and-forget coroutine
 const job = launch(function() {

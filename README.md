@@ -141,16 +141,16 @@ const messageFlow = flow(async function* () {
 Never leak resources or lose errors in concurrent operations:
 
 ```typescript
-import { coroutineScope, launch, async, delay, withTimeout } from 'kotlinify-ts';
+import { coroutineScope, launch, asyncValue, delay, withTimeout } from 'kotlinify-ts';
 
 // Parallel operations with automatic cancellation
 await coroutineScope(async (scope) => {
   // Launch parallel tasks
-  const job1 = launch(scope, () => processDataset1());
-  const job2 = launch(scope, () => processDataset2());
+  const job1 = scope.launch(() => processDataset1());
+  const job2 = scope.launch(() => processDataset2());
 
   // Start async computation
-  const deferred = async(scope, () => calculateMetrics());
+  const deferred = scope.async(() => calculateMetrics());
 
   // If any fails, all are cancelled automatically
   await job1.join();

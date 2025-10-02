@@ -177,7 +177,7 @@ export function launch(block: (this: Job) => void | Promise<void>): Job {
   return job
 }
 
-export function async<T>(block: () => Promise<T>): Deferred<T> {
+export function asyncValue<T>(block: () => Promise<T>): Deferred<T> {
   const deferred = new Deferred<T>()
 
   Promise.resolve()
@@ -187,6 +187,8 @@ export function async<T>(block: () => Promise<T>): Deferred<T> {
 
   return deferred
 }
+
+export { asyncValue as async }
 
 export function wrapAsync<T>(promise: Promise<T>): Deferred<T> {
   const deferred = new Deferred<T>()
