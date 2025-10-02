@@ -9,57 +9,56 @@ import { CodeBlock } from "@/components/CodeBlock";
 export default function QuickstartPage() {
   const installCode = `npm install kotlinify-ts`;
 
-  const scopeFunctionsExample = `import 'kotlinify-ts';
+  const scopeFunctionsExample = `import { asScope, apply } from 'kotlinify-ts';
 
 // Transform data through a fluent pipeline - no intermediate variables!
 const apiResponse = { data: { user: { name: "Alice", score: 85 } } };
 
-const message = apiResponse
+const message = asScope(apiResponse)
   .let(response => response.data.user)
   .let(user => ({ ...user, grade: user.score >= 90 ? 'A' : 'B' }))
-  .let(graded => \`\${graded.name} earned a \${graded.grade}\`);
+  .let(graded => \`\${graded.name} earned a \${graded.grade}\`)
+  .value();
 
 console.log(message); // "Alice earned a B"
 
 // Configure complex objects with beautiful chaining
-const config = ({} as any)
-  .apply(cfg => {
-    cfg.apiUrl = process.env.API_URL;
-    cfg.timeout = 5000;
-    cfg.retries = 3;
-    cfg.headers = { 'Content-Type': 'application/json' };
-  });
+const config = apply({} as any, cfg => {
+  cfg.apiUrl = process.env.API_URL;
+  cfg.timeout = 5000;
+  cfg.retries = 3;
+  cfg.headers = { 'Content-Type': 'application/json' };
+});
 
 // Track operations with side effects in a clean chain
-const processedData = fetchData()
+const processedData = asScope(fetchData())
   .let(data => data.filter(item => item.active))
   .also(filtered => console.log(\`Processing \${filtered.length} items\`))
   .let(items => items.map(item => item.value))
-  .also(values => metrics.record('items.processed', values.length));`;
+  .also(values => metrics.record('items.processed', values.length))
+  .value();`;
 
-  const nullSafetyExample = `import 'kotlinify-ts';
+  const nullSafetyExample = `import { asScope, letOrNull, applyOrNull, takeIf, takeUnless } from 'kotlinify-ts';
 
 // Safely transform nullable values with elegant chaining
 const userInput: string | null = getUserInput();
 
-const result = userInput
-  ?.letOrNull(input => input.trim())
-  ?.let(trimmed => trimmed.toLowerCase())
-  ?.let(normalized => normalizeText(normalized));
+const result = asScope(userInput)
+  .letOrNull(input => input.trim())
+  .letOrNull(trimmed => trimmed.toLowerCase())
+  .letOrNull(normalized => normalizeText(normalized))
+  .value();
 
 // Conditional value retention with fluent API
-const validEmail = email
-  .takeIf(e => e.includes('@') && e.includes('.'));
+const validEmail = takeIf(email, e => e.includes('@') && e.includes('.'));
 
-const nonEmptyList = items
-  .takeUnless(list => list.length === 0);
+const nonEmptyList = takeUnless(items, list => list.length === 0);
 
 // Configure objects only when non-null
-const user = findUserById(id)
-  ?.applyOrNull(u => {
-    u.lastSeen = Date.now();
-    u.sessionCount++;
-  });`;
+const user = applyOrNull(findUserById(id), u => {
+  u.lastSeen = Date.now();
+  u.sessionCount++;
+});`;
 
   const flowExample = `import { flowOf, flow, MutableStateFlow } from 'kotlinify-ts/flow';
 
@@ -134,24 +133,27 @@ const processed = await tryCatchAsync(() => fetchData())
   .map(valid => transformData(valid))
   .recover(error => getDefaultData());`;
 
-  const prototypeExample = `import 'kotlinify-ts';
+  const prototypeExample = `import { asScope, apply, takeIf } from 'kotlinify-ts';
+import { asSequence } from 'kotlinify-ts/sequences';
 
-// Now you can use method chaining on any value
-const result = (5)
+// Clean method chaining with asScope
+const result = asScope(5)
   .let(x => x * 2)
   .also(x => console.log("Doubled:", x))
-  .let(x => x + 10);
+  .let(x => x + 10)
+  .value();
 
-const configured = { name: "Test" }
-  .apply(obj => { obj.id = generateId(); })
-  .also(obj => logger.info("Created:", obj));
+const configured = apply({ name: "Test" }, obj => {
+  obj.id = generateId();
+  logger.info("Created:", obj);
+});
 
-const safe = getUserInput()
-  .takeIf(input => input.length > 0)
-  ?.let(input => input.trim());
+const safe = asScope(getUserInput())
+  .let(input => takeIf(input, i => i.length > 0))
+  .letOrNull(input => input?.trim())
+  .value();
 
-[1, 2, 3, 4, 5]
-  .asSequence()
+const evens = asSequence([1, 2, 3, 4, 5])
   .filter(x => x % 2 === 0)
   .map(x => x * x)
   .toArray(); // [4, 16]`;
@@ -202,11 +204,12 @@ return null;`} language="typescript" />
                 <span className="text-xl">✅</span> With Kotlinify
               </h3>
               <CodeBlock code={`// Clean, chainable, functional - ONE beautiful expression!
-fetchData()
-  ?.let(data => data.filter(x => x.active))
-  ?.also(d => console.log(\`Processing \${d.length}\`))
-  ?.let(d => d.map(x => x.value))
-  ?.also(d => metrics.record('processed', d.length));`} language="typescript" />
+asScope(fetchData())
+  .letOrNull(data => data?.filter(x => x.active))
+  .also(d => d && console.log(\`Processing \${d.length}\`))
+  .letOrNull(d => d?.map(x => x.value))
+  .also(d => d && metrics.record('processed', d.length))
+  .value();`} language="typescript" />
             </div>
           </div>
         </DocsSection>
