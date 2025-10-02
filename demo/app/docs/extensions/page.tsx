@@ -711,7 +711,7 @@ if (!result.valid) {
 
         <DocsSection
           title="Migration Guide"
-          description="Moving from global prototype modifications to kotlinify extensions"
+          description="Moving from global prototype modifications to kotlinify-ts extensions"
         >
           <div className="space-y-6">
             <CodeBlock

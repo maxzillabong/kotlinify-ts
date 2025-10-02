@@ -1,245 +1,297 @@
 "use client";
 
 import Link from "next/link";
-import { Target, Zap, Waves, RefreshCw, Shield, Package, Feather, Lock, Rocket } from "lucide-react";
-import { LucideIcon } from "lucide-react";
+import {
+  Feather,
+  Lock,
+  LucideIcon,
+  Package,
+  RefreshCw,
+  Rocket,
+  Shield,
+  Target,
+  Waves,
+  Zap,
+} from "lucide-react";
+import { Spotlight } from "@/components/aceternity/spotlight";
+import { TextGenerateEffect } from "@/components/aceternity/text-generate-effect";
+import { LogoMark } from "@/components/LogoMark";
+import { Footer } from "@/components/Footer";
 
-const FeatureCard = ({
-  icon: Icon,
-  title,
-  description,
-  href
-}: {
+const features: Array<{
   icon: LucideIcon;
   title: string;
   description: string;
   href: string;
-}) => (
+}> = [
+  {
+    icon: Target,
+    title: "Scope Functions",
+    description:
+      "Transform objects with let, apply, also, run, and with for expressive pipelines without temporary variables.",
+    href: "/docs/scope-functions",
+  },
+  {
+    icon: Zap,
+    title: "Lazy Sequences",
+    description:
+      "Process large datasets with streaming transforms and short-circuiting performance that beats arrays when it matters.",
+    href: "/docs/sequences",
+  },
+  {
+    icon: Waves,
+    title: "Flow Streams",
+    description:
+      "Coordinate async jobs with cold and hot streams, cancellable backpressure, and ergonomic async iteration.",
+    href: "/docs/flow",
+  },
+  {
+    icon: RefreshCw,
+    title: "Coroutines",
+    description:
+      "Launch background work with timeouts, cancellation, and error propagation inspired by Kotlin structured concurrency.",
+    href: "/docs/coroutines",
+  },
+  {
+    icon: Shield,
+    title: "Typed Errors",
+    description:
+      "Adopt Result, Option, and Either monads for explicit error handling that keeps control flow predictable.",
+    href: "/docs/monads",
+  },
+  {
+    icon: Package,
+    title: "Collections",
+    description:
+      "Group, partition, and transform iterables with zero-dependency utilities tuned for TypeScript type inference.",
+    href: "/docs/collections",
+  },
+];
+
+const highlights: Array<{
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}> = [
+  {
+    icon: Feather,
+    title: "Lightweight",
+    description: "Zero dependencies with tree-shakeable modules from 120 bytes up to 8 KB gzipped.",
+  },
+  {
+    icon: Lock,
+    title: "Type-Safe",
+    description: "Inferred generics and exhaustive unions keep Kotlin-style ergonomics inside TypeScript projects.",
+  },
+  {
+    icon: Rocket,
+    title: "Production-Ready",
+    description: "Battle-tested core covered by 95%+ automated tests across scope, flow, and collection modules.",
+  },
+];
+
+const testimonials = [
+  {
+    quote:
+      "kotlinify brings the best parts of Kotlin to TypeScript. Scope helpers and monads keep our codebases consistent across platforms.",
+    author: "Product Engineering Lead",
+  },
+  {
+    quote:
+      "Moving reactive pipelines to Flow cut cognitive load. The coroutine-style cancellation is a perfect fit for React apps.",
+    author: "Frontend Staff Engineer",
+  },
+];
+
+const FeatureCard = ({ icon: Icon, title, description, href }: (typeof features)[number]) => (
   <Link
     href={href}
-    className="group block p-8 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-slate-600/30 rounded-xl transition-all duration-300 hover:scale-[1.03] hover:shadow-xl hover:shadow-slate-600/10"
+    className="group relative overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
   >
-    <Icon className="w-10 h-10 mb-4 text-slate-500 group-hover:text-slate-400 transition-all group-hover:scale-110" />
-    <h3 className="text-xl font-semibold mb-3 text-white group-hover:text-slate-400 transition-colors">
+    <div className="absolute inset-0 hidden opacity-0 transition-opacity duration-300 dark:block dark:group-hover:opacity-100">
+      <div className="absolute inset-[-40%] bg-gradient-to-br from-primary/20 via-transparent to-accent/20 blur-3xl" />
+    </div>
+    <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/15">
+      <Icon className="h-6 w-6" />
+    </div>
+    <h3 className="relative mt-6 text-xl font-semibold text-foreground">
       {title}
     </h3>
-    <p className="text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors">
+    <p className="relative mt-3 text-base text-muted-foreground leading-relaxed">
       {description}
     </p>
   </Link>
 );
 
+const Highlight = ({ icon: Icon, title, description }: (typeof highlights)[number]) => (
+  <div className="flex flex-col items-center rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground dark:bg-secondary/60">
+      <Icon className="h-6 w-6" />
+    </div>
+    <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{description}</p>
+  </div>
+);
+
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm bg-black/20 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src="/logo.svg" alt="kotlinify-ts" className="w-8 h-8" />
-            <span className="text-xl font-bold text-white">kotlinify-ts</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <Link href="/docs" className="text-gray-300 hover:text-white transition-colors">
-              Docs
-            </Link>
-            <Link href="/docs/api" className="text-gray-300 hover:text-white transition-colors">
-              API Reference
-            </Link>
-            <a
-              href="https://github.com/maxzillabong/kotlinify-ts"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              GitHub
-            </a>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight animate-fadeInUp">
-            Kotlin patterns for TypeScript
-          </h1>
-          <p className="text-xl text-gray-300 mb-8 leading-relaxed animate-fadeInUp-delay-1">
-            Scope functions, lazy sequences, flow streams, and functional error handling
-          </p>
-          <div className="flex gap-4 justify-center animate-fadeInUp-delay-2">
-            <Link
-              href="/docs/quickstart"
-              className="px-8 py-3 bg-slate-700 hover:bg-slate-800 text-white font-semibold rounded-lg transition-all hover:scale-105"
-            >
-              Get Started
-            </Link>
-            <Link
-              href="/docs"
-              className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg border border-white/20 transition-all hover:scale-105"
-            >
-              Documentation
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-6">
-            <FeatureCard
-              icon={Target}
-              title="Scope Functions"
-              description="Transform objects with let, apply, also, run, and with. Make your code more expressive and reduce intermediate variables."
-              href="/docs/scope-functions"
-            />
-            <FeatureCard
-              icon={Zap}
-              title="Lazy Sequences"
-              description="Process large datasets efficiently with lazy evaluation. 22,500× faster than arrays for early-termination scenarios."
-              href="/docs/sequences"
-            />
-            <FeatureCard
-              icon={Waves}
-              title="Flow Streams"
-              description="Cold and hot reactive streams with backpressure support. Handle real-time data, user input, and WebSocket connections."
-              href="/docs/flow"
-            />
-            <FeatureCard
-              icon={RefreshCw}
-              title="Coroutines"
-              description="Structured concurrency with automatic cancellation. Launch background jobs with timeout and error handling built-in."
-              href="/docs/coroutines"
-            />
-            <FeatureCard
-              icon={Shield}
-              title="Typed Errors"
-              description="Functional error handling with Option, Either, and Result monads. Eliminate try-catch and handle errors explicitly."
-              href="/docs/monads"
-            />
-            <FeatureCard
-              icon={Package}
-              title="Collections"
-              description="Powerful utilities for arrays and iterables. Group, partition, chunk, and transform collections with ease."
-              href="/docs/collections"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Why kotlinify-ts Section */}
-      <section className="py-20 px-6 bg-black/20">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-12">
-            Why kotlinify-ts?
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <Feather className="w-12 h-12 mb-4 text-slate-500 mx-auto" />
-              <h3 className="text-lg font-semibold text-white mb-2">Lightweight</h3>
-              <p className="text-gray-400">Zero dependencies. 120 bytes to 8KB gzipped. Tree-shakeable modules.</p>
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-background">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className="absolute inset-0 dark:hidden"
+          style={{ background: "radial-gradient(circle at top, rgba(179, 197, 255, 0.24) 0%, transparent 65%)" }}
+        />
+        <Spotlight
+          className="hidden dark:block left-1/2 top-[-20%] h-[120%] w-[120%] -translate-x-1/2 opacity-60 blur-3xl"
+          fill="var(--accent)"
+        />
+        <Spotlight
+          className="hidden dark:block left-[65%] top-[30%] h-[90%] w-[90%] opacity-40 blur-2xl"
+          fill="var(--primary)"
+        />
+      </div>
+      <div className="relative z-10 flex flex-1 flex-col">
+        <nav className="sticky top-0 z-50 border-b border-border bg-background/75 backdrop-blur-xl">
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-5">
+            <div className="flex items-center gap-3">
+              <LogoMark size={40} />
+              <div className="flex flex-col">
+                <span className="text-sm uppercase tracking-widest text-muted-foreground">kotlinify</span>
+                <span className="text-lg font-semibold text-foreground">Kotlin patterns for TypeScript</span>
+              </div>
             </div>
-            <div className="text-center">
-              <Lock className="w-12 h-12 mb-4 text-slate-500 mx-auto" />
-              <h3 className="text-lg font-semibold text-white mb-2">Type-Safe</h3>
-              <p className="text-gray-400">Full TypeScript support with complete type inference throughout.</p>
-            </div>
-            <div className="text-center">
-              <Rocket className="w-12 h-12 mb-4 text-slate-500 mx-auto" />
-              <h3 className="text-lg font-semibold text-white mb-2">Production-Ready</h3>
-              <p className="text-gray-400">Battle-tested patterns from Kotlin stdlib. A- grade, 95% tested.</p>
+            <div className="flex items-center gap-4">
+              <Link href="/docs" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                Docs
+              </Link>
+              <Link
+                href="/docs/api"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                API
+              </Link>
+              <a
+                href="https://github.com/maxzillabong/kotlinify-kt"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                GitHub
+              </a>
             </div>
           </div>
-        </div>
-      </section>
+        </nav>
 
-      {/* Community Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-12">
-            Trusted by developers
-          </h2>
-          <div className="space-y-8">
-            <blockquote className="bg-white/5 border border-white/10 rounded-xl p-8">
-              <p className="text-gray-300 mb-4 leading-relaxed italic">
-                &quot;kotlinify-ts brings the best parts of Kotlin to TypeScript. The scope functions make my code so much more readable, and the lazy sequences are a game-changer for performance.&quot;
+        <main className="flex-1">
+          <section className="relative overflow-hidden px-6 pb-24 pt-32">
+            <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
+              <TextGenerateEffect
+                words="Bring expressive Kotlin utilities to your TypeScript codebase"
+                className="text-balance text-4xl font-semibold leading-tight text-foreground md:text-6xl"
+              />
+              <p className="mt-6 max-w-3xl text-balance text-lg text-muted-foreground md:text-xl">
+                Scope helpers, lazy sequences, resilient flow streams, and exhaustive monads crafted for modern full-stack teams.
               </p>
-              <cite className="text-sm text-gray-400">— TypeScript Developer</cite>
-            </blockquote>
-            <blockquote className="bg-white/5 border border-white/10 rounded-xl p-8">
-              <p className="text-gray-300 mb-4 leading-relaxed italic">
-                &quot;Switching from RxJS to kotlinify-ts Flow was seamless. The API is cleaner, the performance is better, and it integrates perfectly with async/await.&quot;
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+                <Link
+                  href="/docs/quickstart"
+                  className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-primary to-accent px-8 py-3 text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:-translate-y-0.5 hover:shadow-xl"
+                >
+                  Explore Quickstart
+                </Link>
+                <Link
+                  href="/docs"
+                  className="inline-flex items-center justify-center rounded-full border border-border bg-card px-8 py-3 text-sm font-semibold text-foreground transition-all hover:-translate-y-0.5 hover:border-border hover:shadow-lg"
+                >
+                  Browse Documentation
+                </Link>
+              </div>
+              <div className="mt-12 grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="rounded-2xl border border-border bg-card p-4 text-left shadow-sm">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Installation</p>
+                  <p className="mt-2 truncate font-mono text-sm text-foreground">npm install kotlinify-ts</p>
+                </div>
+                <div className="rounded-2xl border border-border bg-card p-4 text-left shadow-sm">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Bundle Size</p>
+                  <p className="mt-2 text-sm text-foreground">0 deps · tree-shakeable</p>
+                </div>
+                <div className="rounded-2xl border border-border bg-card p-4 text-left shadow-sm">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Compatibility</p>
+                  <p className="mt-2 text-sm text-foreground">Node 18 · React 18+</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="px-6 pb-24">
+            <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
+              <div className="flex flex-col gap-3 text-center">
+                <h2 className="text-3xl font-semibold text-foreground md:text-4xl">Everything you love from Kotlin</h2>
+                <p className="text-lg text-muted-foreground">
+                  Familiar APIs with rigorous TypeScript typings so every helper feels instantly at home.
+                </p>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2">
+                {features.map((feature) => (
+                  <FeatureCard key={feature.title} {...feature} />
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="px-6 pb-24">
+            <div className="mx-auto flex w-full max-w-5xl flex-col items-center text-center">
+              <h2 className="text-3xl font-semibold text-foreground md:text-4xl">Product-minded ergonomics</h2>
+              <p className="mt-3 max-w-3xl text-lg text-muted-foreground">
+                Designed for teams shipping across web, mobile, and server runtimes with consistent patterns.
               </p>
-              <cite className="text-sm text-gray-400">— Frontend Engineer</cite>
-            </blockquote>
-          </div>
-        </div>
-      </section>
+              <div className="mt-10 grid w-full gap-6 md:grid-cols-3">
+                {highlights.map((highlight) => (
+                  <Highlight key={highlight.title} {...highlight} />
+                ))}
+              </div>
+            </div>
+          </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-6 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-white mb-6">
-            Ready to get started?
-          </h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Install kotlinify-ts in under 30 seconds
-          </p>
-          <div className="bg-black/40 border border-white/10 rounded-lg p-6 mb-8 max-w-xl mx-auto">
-            <code className="text-slate-400 font-mono">npm install kotlinify-ts</code>
-          </div>
-          <Link
-            href="/docs/quickstart"
-            className="inline-block px-8 py-3 bg-slate-700 hover:bg-slate-800 text-white font-semibold rounded-lg transition-colors"
-          >
-            View Quickstart Guide
-          </Link>
-        </div>
-      </section>
+          <section className="px-6 pb-24">
+            <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 text-center">
+              <h2 className="text-3xl font-semibold text-foreground md:text-4xl">Trusted by teams shipping fast</h2>
+              <div className="grid gap-6">
+                {testimonials.map(({ quote, author }) => (
+                  <blockquote
+                    key={author}
+                    className="rounded-2xl border border-border bg-card p-8 text-left shadow-sm"
+                  >
+                    <p className="text-lg italic text-foreground">“{quote}”</p>
+                    <cite className="mt-4 block text-sm font-medium text-muted-foreground">{author}</cite>
+                  </blockquote>
+                ))}
+              </div>
+            </div>
+          </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-6 border-t border-white/10">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h4 className="text-white font-semibold mb-4">Learn</h4>
-              <ul className="space-y-2">
-                <li><Link href="/docs/quickstart" className="text-gray-400 hover:text-white transition-colors">Quickstart</Link></li>
-                <li><Link href="/docs/scope-functions" className="text-gray-400 hover:text-white transition-colors">Scope Functions</Link></li>
-                <li><Link href="/docs/sequences" className="text-gray-400 hover:text-white transition-colors">Sequences</Link></li>
-                <li><Link href="/docs/flow" className="text-gray-400 hover:text-white transition-colors">Flow</Link></li>
-              </ul>
+          <section className="px-6 pb-32">
+            <div className="mx-auto flex w-full max-w-4xl flex-col items-center rounded-3xl border border-border bg-card p-12 text-center shadow-xl">
+              <h2 className="text-3xl font-semibold text-foreground md:text-4xl">Ready to ship Kotlin vibes?</h2>
+              <p className="mt-3 max-w-2xl text-lg text-muted-foreground">
+                Install kotlinify-ts and unlock expressive, type-safe utilities that scale from side projects to enterprise platforms.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <code className="rounded-full border border-border bg-card px-6 py-3 font-mono text-sm text-foreground shadow-inner">
+                  npm install kotlinify-ts
+                </code>
+                <Link
+                  href="/docs/quickstart"
+                  className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground transition-all hover:-translate-y-0.5 hover:bg-primary/90"
+                >
+                  View Quickstart Guide
+                </Link>
+              </div>
             </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Guides</h4>
-              <ul className="space-y-2">
-                <li><Link href="/docs/client-side" className="text-gray-400 hover:text-white transition-colors">Client-Side</Link></li>
-                <li><Link href="/docs/server-side" className="text-gray-400 hover:text-white transition-colors">Server-Side</Link></li>
-                <li><Link href="/docs/api" className="text-gray-400 hover:text-white transition-colors">API Reference</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Community</h4>
-              <ul className="space-y-2">
-                <li><a href="https://github.com/maxzillabong/kotlinify-ts" className="text-gray-400 hover:text-white transition-colors">GitHub</a></li>
-                <li><a href="https://github.com/maxzillabong/kotlinify-ts/discussions" className="text-gray-400 hover:text-white transition-colors">Discussions</a></li>
-                <li><a href="https://github.com/maxzillabong/kotlinify-ts/issues" className="text-gray-400 hover:text-white transition-colors">Issues</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">More</h4>
-              <ul className="space-y-2">
-                <li><Link href="/docs/changelog" className="text-gray-400 hover:text-white transition-colors">Changelog</Link></li>
-                <li><Link href="/docs/contributing" className="text-gray-400 hover:text-white transition-colors">Contributing</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="text-center text-gray-400 text-sm">
-            <p>Built with ❤️ for Kotlin and TypeScript developers</p>
-          </div>
-        </div>
-      </footer>
+          </section>
+        </main>
+        <Footer />
+      </div>
     </div>
   );
 }

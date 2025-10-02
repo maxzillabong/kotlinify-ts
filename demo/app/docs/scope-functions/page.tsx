@@ -8,8 +8,8 @@ import Link from "next/link";
 export default function ScopeFunctionsPage() {
   return (
     <DocsPageLayout>
-      <h1 className="text-4xl font-bold text-white mb-6">Scope Functions</h1>
-      <p className="text-xl text-gray-300 mb-12">
+      <h1 className="text-4xl font-bold text-foreground mb-6">Scope Functions</h1>
+      <p className="text-xl text-muted-foreground mb-12">
         Stop drowning in temporary variables and nested callbacks. Transform verbose spaghetti code into elegant, readable pipelines.
       </p>
 
@@ -18,8 +18,8 @@ export default function ScopeFunctionsPage() {
           title="The Problem: TypeScript's Variable Hell"
           description="Every TypeScript developer knows this pain. You've been there."
         >
-          <div className="bg-red-900/10 border border-red-600/20 rounded-lg p-6 mb-6">
-            <h4 className="text-xl font-semibold text-red-400 mb-4">The Familiar Nightmare</h4>
+          <div className="bg-card border-l-4 border-l-red-500 border border-border rounded-lg p-6 mb-6">
+            <h4 className="text-xl font-semibold text-foreground mb-4">The Familiar Nightmare</h4>
             <CodeBlock
               code={`// We've all written this mess...
 const data = await fetchData();
@@ -40,11 +40,11 @@ return result;
             />
           </div>
 
-          <div className="bg-gradient-to-r from-slate-600/10 to-blue-500/10 border border-slate-600/20 rounded-lg p-6 mb-6">
-            <h4 className="text-xl font-semibold text-white mb-4">The Elegant Solution</h4>
+          <div className="bg-card border-l-4 border-l-blue-500 border border-border rounded-lg p-6 mb-6">
+            <h4 className="text-xl font-semibold text-foreground mb-4">The Elegant Solution</h4>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <p className="text-sm text-gray-400 mb-2">❌ Before: Variable Soup</p>
+                <p className="text-sm text-muted-foreground mb-2">❌ Before: Variable Soup</p>
                 <CodeBlock
                   code={`const user = await fetchUser(id);
 const profile = user.profile;
@@ -60,18 +60,18 @@ return formatted;`}
                 />
               </div>
               <div>
-                <p className="text-sm text-gray-400 mb-2">✅ After: Crystal Clear Intent</p>
+                <p className="text-sm text-muted-foreground mb-2">✅ After: Crystal Clear Intent</p>
                 <CodeBlock
-                  code={`import { letValue, also, apply } from 'kotlinify-ts/scope';
+                  code={`import { asScope } from 'kotlinify-ts/scope';
 
-return letValue(
-  await fetchUser(id),
-  user => apply(user, u => {
+return asScope(fetchUser(id))
+  .apply(u => {
     if (u.profile.settings.theme === 'dark') {
       applyDarkMode();
     }
   })
-).let(user => formatUser(user));
+  .let(user => formatUser(user))
+  .value();
 
 // One expression. Clear data flow. Easy to refactor.`}
                   language="typescript"
@@ -80,23 +80,23 @@ return letValue(
             </div>
           </div>
 
-          <div className="bg-yellow-900/10 border border-yellow-600/20 rounded-lg p-6">
-            <h4 className="text-lg font-semibold text-yellow-400 mb-3">Why This Matters</h4>
-            <ul className="space-y-2 text-gray-300">
+          <div className="bg-card border-l-4 border-l-yellow-500 border border-border rounded-lg p-6">
+            <h4 className="text-lg font-semibold text-foreground mb-3">Why This Matters</h4>
+            <ul className="space-y-2 text-muted-foreground">
               <li className="flex items-start">
-                <span className="text-yellow-400 mr-2">→</span>
+                <span className="text-foreground mr-2">→</span>
                 <span><strong>Reduced Cognitive Load:</strong> No more tracking 10 temporary variables in your head</span>
               </li>
               <li className="flex items-start">
-                <span className="text-yellow-400 mr-2">→</span>
+                <span className="text-foreground mr-2">→</span>
                 <span><strong>Refactoring Safety:</strong> Move entire transformation chains without breaking dependencies</span>
               </li>
               <li className="flex items-start">
-                <span className="text-yellow-400 mr-2">→</span>
+                <span className="text-foreground mr-2">→</span>
                 <span><strong>Clear Intent:</strong> Code reads like a story, not a puzzle</span>
               </li>
               <li className="flex items-start">
-                <span className="text-yellow-400 mr-2">→</span>
+                <span className="text-foreground mr-2">→</span>
                 <span><strong>Fewer Bugs:</strong> Can't accidentally use the wrong variable when there aren't any</span>
               </li>
             </ul>
@@ -107,30 +107,39 @@ return letValue(
           title="Installation & Setup"
           description="One import unlocks the full power of chainable scope functions"
         >
-          <div className="bg-gradient-to-r from-slate-600/20 to-pink-500/20 border border-slate-600/30 rounded-lg p-6">
-            <h4 className="text-xl font-semibold text-white mb-3">🚀 Enable the Magic</h4>
-            <p className="text-gray-200 mb-4">
+          <div className="bg-card border-l-4 border-l-blue-500 border border-border rounded-lg p-6">
+            <h4 className="text-xl font-semibold text-foreground mb-3">🚀 Enable the Magic</h4>
+            <p className="text-muted-foreground mb-4">
               The true power of kotlinify-ts comes from its chainable API. With one simple import,
               every value in your codebase gains the ability to flow through elegant transformation pipelines.
             </p>
             <CodeBlock
-              code={`import 'kotlinify-ts';
+              code={`import { asScope } from 'kotlinify-ts/scope';
 
-// Now EVERY value can use scope functions
-const result = value
+// Use asScope() for safe method chaining
+const result = asScope(value)
   .let(v => v.transform())
   .also(v => console.log('Debug:', v))
-  .let(v => v.toString());
+  .let(v => v.toString())
+  .value();
 
 // Chain through complex transformations
-const processed = getUserData()
+const processed = asScope(getUserData())
   .let(data => normalize(data))
   .apply(data => {
     data.timestamp = Date.now();
     data.version = '2.0';
   })
   .also(data => cache.store(data))
-  .let(data => formatForDisplay(data));`}
+  .let(data => formatForDisplay(data))
+  .value();
+
+// Alternative: Enable global prototype extensions (use with caution)
+import { enableKotlinifyExtensions } from 'kotlinify-ts/scope';
+enableKotlinifyExtensions();
+
+// Now values have direct access to scope functions
+const direct = value.let(v => v * 2).also(console.log);`}
               language="typescript"
             />
 
@@ -148,9 +157,9 @@ const processed = getUserData()
           description="Transform a value and return the result of the transformation"
         >
           <div className="space-y-6">
-            <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-2">When to use:</p>
-              <ul className="text-gray-300 space-y-1 list-disc list-inside">
+            <div className="bg-card border border-border rounded-lg p-4">
+              <p className="text-sm text-muted-foreground mb-2">When to use:</p>
+              <ul className="text-muted-foreground space-y-1 list-disc list-inside">
                 <li>Converting nullable values to non-nullable results</li>
                 <li>Executing a block of code only if a value is not null</li>
                 <li>Introducing an expression as a variable in local scope</li>
@@ -158,36 +167,44 @@ const processed = getUserData()
             </div>
 
             <CodeBlock
-              code={`import 'kotlinify-ts';
+              code={`import { asScope, letValue } from 'kotlinify-ts/scope';
 
-// Beautiful method chaining - the way it's meant to be used
-const formatted = getUserData()
+// Method 1: Use asScope() for safe chaining
+const formatted = asScope(getUserData())
   .let(data => data.normalize())
   .let(data => data.validate())
-  .let(data => JSON.stringify(data));
+  .let(data => JSON.stringify(data))
+  .value();
 
-// Chain through mathematical operations
+// Method 2: Use standalone function
+const upperName = letValue(
+  { name: "Alice", age: 30 },
+  user => user.name.toUpperCase()
+);
+
+// Method 3: With prototype extensions enabled
+import { enableKotlinifyExtensions } from 'kotlinify-ts/scope';
+enableKotlinifyExtensions();
+
+// Now use directly on values
 const result = (5)
   .let(x => x * 2)    // 10
   .let(x => x + 3)    // 13
   .let(x => x ** 2)   // 169
   .let(x => "Result: " + x);
 
-// Real-world: API response processing with chaining
-const displayName = fetchUserProfile(id)
+// Real-world: API response processing
+const displayName = asScope(fetchUserProfile(id))
   .let(profile => profile.firstName + " " + profile.lastName)
-  .let(fullName => fullName.trim() || "Anonymous");
-
-// Extract nested properties elegantly
-const upperName = { name: "Alice", age: 30 }
-  .let(user => user.name)
-  .let(name => name.toUpperCase());
+  .let(fullName => fullName.trim() || "Anonymous")
+  .value();
 
 // Chain through async operations
-const processed = await fetchData()
+const processed = asScope(fetchData())
   .let(response => response.json())
   .let(data => data.items)
-  .let(items => items.filter(i => i.active));`}
+  .let(items => items.filter(i => i.active))
+  .value();`}
               language="typescript"
             />
           </div>
@@ -198,9 +215,9 @@ const processed = await fetchData()
           description="Configure an object and return the same object - perfect for initialization"
         >
           <div className="space-y-6">
-            <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-2">When to use:</p>
-              <ul className="text-gray-300 space-y-1 list-disc list-inside">
+            <div className="bg-card border border-border rounded-lg p-4">
+              <p className="text-sm text-muted-foreground mb-2">When to use:</p>
+              <ul className="text-muted-foreground space-y-1 list-disc list-inside">
                 <li>Object configuration and initialization</li>
                 <li>Builder pattern implementation</li>
                 <li>Setting multiple properties at once</li>
@@ -208,10 +225,10 @@ const processed = await fetchData()
             </div>
 
             <CodeBlock
-              code={`import 'kotlinify-ts';
+              code={`import { asScope, apply } from 'kotlinify-ts/scope';
 
-// Method chaining - Build complex objects fluently
-const user = {}
+// Method 1: Use asScope() for chaining
+const user = asScope({})
   .apply(u => {
     u.id = generateId();
     u.createdAt = new Date();
@@ -223,16 +240,20 @@ const user = {}
   })
   .apply(u => {
     u.preferences = { theme: 'dark', language: 'en' };
-  });
+  })
+  .value();
 
-// Configure DOM elements with chaining
-const canvas = document.createElement('canvas')
-  .apply(c => {
-    c.width = 800;
-    c.height = 600;
-    c.style.border = '1px solid black';
-    c.getContext('2d')?.fillRect(0, 0, 100, 100);
-  });
+// Method 2: Use standalone function
+const canvas = apply(document.createElement('canvas'), c => {
+  c.width = 800;
+  c.height = 600;
+  c.style.border = '1px solid black';
+  c.getContext('2d')?.fillRect(0, 0, 100, 100);
+});
+
+// Method 3: With prototype extensions
+import { enableKotlinifyExtensions } from 'kotlinify-ts/scope';
+enableKotlinifyExtensions();
 
 // Real-world: Building complex configurations
 const server = { host: '', port: 0, ssl: false }
@@ -242,17 +263,18 @@ const server = { host: '', port: 0, ssl: false }
     config.ssl = process.env.NODE_ENV === 'production';
   });
 
-// Combine apply with let for configuration then transformation
-const jsonConfig = { database: {} }
+// Combine apply with let using asScope()
+const jsonConfig = asScope({ database: {} })
   .apply(cfg => {
     cfg.database.host = 'localhost';
     cfg.database.port = 5432;
     cfg.database.name = 'myapp';
   })
-  .let(cfg => JSON.stringify(cfg, null, 2));
+  .let(cfg => JSON.stringify(cfg, null, 2))
+  .value();
 
 // Chain multiple apply calls for organized configuration
-const component = createComponent()
+const component = asScope(createComponent())
   .apply(c => { // Set dimensions
     c.width = 300;
     c.height = 200;
@@ -263,7 +285,8 @@ const component = createComponent()
   .apply(c => { // Set behavior
     c.onClick = handleClick;
     c.onHover = handleHover;
-  });`}
+  })
+  .value();`}
               language="typescript"
             />
           </div>
@@ -274,9 +297,9 @@ const component = createComponent()
           description="Perform side effects like logging or validation and return the original value"
         >
           <div className="space-y-6">
-            <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-2">When to use:</p>
-              <ul className="text-gray-300 space-y-1 list-disc list-inside">
+            <div className="bg-card border border-border rounded-lg p-4">
+              <p className="text-sm text-muted-foreground mb-2">When to use:</p>
+              <ul className="text-muted-foreground space-y-1 list-disc list-inside">
                 <li>Logging intermediate values in a chain</li>
                 <li>Validation that doesn't transform the value</li>
                 <li>Side effects like caching or analytics</li>
@@ -284,18 +307,30 @@ const component = createComponent()
             </div>
 
             <CodeBlock
-              code={`import 'kotlinify-ts';
+              code={`import { asScope, also } from 'kotlinify-ts/scope';
 
-// Method chaining - Debug complex transformations elegantly
-const result = computeExpensiveValue()
+// Method 1: Use asScope() for chaining
+const result = asScope(computeExpensiveValue())
   .also(v => console.time('processing'))
   .let(v => heavyTransformation(v))
   .also(v => console.timeEnd('processing'))
   .also(v => cache.set(cacheKey, v))
   .also(v => metrics.recordComputation(v))
-  .let(v => formatForDisplay(v));
+  .let(v => formatForDisplay(v))
+  .value();
 
-// Validation chain with also - clean and readable
+// Method 2: Use standalone function
+const validated = also(generatePassword(), pwd => {
+  if (pwd.length < 12) throw new Error('Password too short');
+  if (!/[A-Z]/.test(pwd)) throw new Error('Must contain uppercase');
+  if (!/[0-9]/.test(pwd)) throw new Error('Must contain number');
+});
+
+// Method 3: With prototype extensions
+import { enableKotlinifyExtensions } from 'kotlinify-ts/scope';
+enableKotlinifyExtensions();
+
+// Validation chain - clean and readable
 const securePassword = generatePassword()
   .also(pwd => {
     if (pwd.length < 12) throw new Error('Password too short');
@@ -309,23 +344,14 @@ const securePassword = generatePassword()
   .also(pwd => auditLog.record('password_generated'));
 
 // Real-world: Track data through processing pipeline
-const processedData = fetchData(url)
+const processedData = asScope(fetchData(url))
   .also(data => console.log('[DEBUG] Fetched:', data.length, 'items'))
   .also(data => analytics.track('data_fetched', { count: data.length }))
   .let(data => data.filter(item => item.active))
   .also(filtered => console.log('[DEBUG] After filter:', filtered.length))
   .let(data => data.map(transform))
-  .also(final => metrics.record('pipeline_complete', final));
-
-// Combine also with let for logging transformations
-const validatedUser = parseUserInput(formData)
-  .also(input => console.log('[AUDIT] User registration:', input.email))
-  .let(input => validateUser(input))
-  .also(valid => {
-    if (!valid.isValid) throw new Error(valid.error);
-  })
-  .let(valid => createUser(valid.data))
-  .also(user => sendWelcomeEmail(user));`}
+  .also(final => metrics.record('pipeline_complete', final))
+  .value();`}
               language="typescript"
             />
           </div>
@@ -336,9 +362,9 @@ const validatedUser = parseUserInput(formData)
           description="Execute a block with 'this' context and return the result - great for computed properties"
         >
           <div className="space-y-6">
-            <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-2">When to use:</p>
-              <ul className="text-gray-300 space-y-1 list-disc list-inside">
+            <div className="bg-card border border-border rounded-lg p-4">
+              <p className="text-sm text-muted-foreground mb-2">When to use:</p>
+              <ul className="text-muted-foreground space-y-1 list-disc list-inside">
                 <li>Computing values based on object properties</li>
                 <li>When you need 'this' context instead of parameter</li>
                 <li>Complex calculations with multiple object properties</li>
@@ -346,10 +372,10 @@ const validatedUser = parseUserInput(formData)
             </div>
 
             <CodeBlock
-              code={`import 'kotlinify-ts';
+              code={`import { asScope, run } from 'kotlinify-ts/scope';
 
-// Method chaining - Compute derived values using 'this'
-const report = getUserMetrics()
+// Method 1: Use asScope() for chaining
+const report = asScope(getUserMetrics())
   .run(function() {
     return {
       total: this.views + this.clicks,
@@ -357,7 +383,17 @@ const report = getUserMetrics()
       quality: this.conversions / this.clicks
     };
   })
-  .let(metrics => formatReport(metrics));
+  .let(metrics => formatReport(metrics))
+  .value();
+
+// Method 2: Use standalone function
+const area = run({ width: 10, height: 20 }, function() {
+  return this.width * this.height;
+});
+
+// Method 3: With prototype extensions
+import { enableKotlinifyExtensions } from 'kotlinify-ts/scope';
+enableKotlinifyExtensions();
 
 // Building and configuring DOM elements
 const element = document.createElement('div')
@@ -369,12 +405,8 @@ const element = document.createElement('div')
   })
   .also(el => document.body.appendChild(el));
 
-// Calculate area using object properties
-const area = { width: 10, height: 20 }
-  .run(function() { return this.width * this.height; });
-
 // Real-world: Complex calculations with context
-const summary = fetchUserStats(userId)
+const summary = asScope(fetchUserStats(userId))
   .run(function() {
     const total = this.posts + this.comments + this.likes;
     const average = total / 3;
@@ -384,10 +416,11 @@ const summary = fetchUserStats(userId)
       level: Math.floor(Math.log2(total))
     };
   })
-  .also(s => console.log('User summary:', s));
+  .also(s => console.log('User summary:', s))
+  .value();
 
 // Chain run with other scope functions
-const processedStats = getPlayerStats()
+const processedStats = asScope(getPlayerStats())
   .run(function() {
     return {
       kda: (this.kills + this.assists) / Math.max(this.deaths, 1),
@@ -398,7 +431,8 @@ const processedStats = getPlayerStats()
   .apply(stats => {
     stats.rank = calculateRank(stats.kda);
   })
-  .also(stats => saveToLeaderboard(stats));`}
+  .also(stats => saveToLeaderboard(stats))
+  .value();`}
               language="typescript"
             />
 
@@ -468,7 +502,7 @@ const query = withValue(
         >
           <div className="space-y-6">
             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-              <p className="text-green-300 text-sm mb-2">
+              <p className="text-green-600 dark:text-green-400 text-sm mb-2">
                 <strong>Available for all scope functions:</strong> letOrNull, applyOrNull, alsoOrNull, runOrNull
               </p>
               <p className="text-green-200/90 text-sm">
@@ -477,7 +511,19 @@ const query = withValue(
             </div>
 
             <CodeBlock
-              code={`import 'kotlinify-ts';
+              code={`import { letOrNull, applyOrNull, alsoOrNull, runOrNull } from 'kotlinify-ts/scope';
+
+// Method 1: Use standalone null-safe functions
+const userAge = letOrNull(getUserOrNull(id), user => user.age);
+
+const configuredWidget = applyOrNull(findWidget(id), widget => {
+  widget.color = 'blue';
+  widget.size = 'large';
+});
+
+// Method 2: With prototype extensions (requires enableKotlinifyExtensions())
+import { enableKotlinifyExtensions } from 'kotlinify-ts/scope';
+enableKotlinifyExtensions();
 
 // Safe chaining with nullable values - elegant and safe!
 const result: string | null = maybeGetUser()
@@ -496,17 +542,6 @@ const displayData = fetchApiResponse()
   ?.letOrNull(data => formatForDisplay(data))
   ?? 'No data available'; // Fallback value
 
-// letOrNull - Transform only if not null
-const userAge = getUserOrNull(id)
-  ?.letOrNull(user => user.age);
-
-// applyOrNull - Configure only if not null
-const configuredWidget = findWidget(id)
-  ?.applyOrNull(widget => {
-    widget.color = 'blue';
-    widget.size = 'large';
-  });
-
 // alsoOrNull - Side effects only if not null
 const cachedValue = computeExpensiveValue()
   ?.alsoOrNull(value => cache.set(key, value));
@@ -517,10 +552,12 @@ const fullName = findUserProfile(id)
     return this.firstName + ' ' + this.lastName;
   });
 
-// Chain null-safe operations with regular ones
+// Combine with other utility functions
+import { takeIf } from 'kotlinify-ts/nullsafety';
+
 const processed = getUserInput()
   ?.letOrNull(input => input.trim())
-  ?.takeIf(s => s.length > 0)
+  ?.let(s => takeIf(s, s => s.length > 0))
   ?.let(s => s.toLowerCase())
   ?.also(s => log('Processing:', s))
   ?? 'default';`}
@@ -534,12 +571,12 @@ const processed = getUserInput()
           description="Combine scope functions for powerful, expressive code"
         >
           <div className="space-y-6">
-            <h4 className="text-lg font-semibold text-white">Pipeline Pattern</h4>
+            <h4 className="text-lg font-semibold text-foreground">Pipeline Pattern</h4>
             <CodeBlock
-              code={`import 'kotlinify-ts';
+              code={`import { asScope } from 'kotlinify-ts/scope';
 
 // Clean, readable data processing pipeline
-const apiResult = fetchRawData()
+const apiResult = asScope(fetchRawData())
   .let(raw => parseJSON(raw))
   .also(data => console.log('Parsed:', data))
   .let(data => validateSchema(data))
@@ -549,10 +586,11 @@ const apiResult = fetchRawData()
     data.timestamp = Date.now();
   })
   .let(data => compress(data))
-  .also(compressed => cache.store(compressed));
+  .also(compressed => cache.store(compressed))
+  .value();
 
 // Complex transformation pipeline
-const processedData = rawData
+const processedData = asScope(rawData)
   .let(data => normalizeData(data))
   .also(d => validateData(d))
   .let(normalized => enrichData(normalized))
@@ -561,22 +599,26 @@ const processedData = rawData
   .apply(result => {
     result.processedAt = Date.now();
     result.version = '2.0';
-  });
+  })
+  .value();
 
 // Async pipeline with error handling
-const result = await fetchUser(id)
-  .let(async user => await enrichUserData(user))
+const result = asScope(fetchUser(id))
+  .let(user => enrichUserData(user))
   .also(user => console.log('Enriched:', user.id))
   .let(user => validateUserPermissions(user))
   .also(validated => auditLog.record(validated))
-  .let(user => prepareUserResponse(user));`}
+  .let(user => prepareUserResponse(user))
+  .value();`}
               language="typescript"
             />
 
-            <h4 className="text-lg font-semibold text-white mt-6">Builder Pattern</h4>
+            <h4 className="text-lg font-semibold text-foreground mt-6">Builder Pattern</h4>
             <CodeBlock
-              code={`// Building complex objects fluently
-const request = {}
+              code={`import { asScope } from 'kotlinify-ts/scope';
+
+// Building complex objects fluently
+const request = asScope({})
   .apply(r => {
     r.method = 'POST';
     r.url = '/api/users';
@@ -591,14 +633,17 @@ const request = {}
     r.body = JSON.stringify({ name, email });
   })
   .also(r => console.log('Sending request:', r))
-  .let(r => fetch(r.url, r));`}
+  .let(r => fetch(r.url, r))
+  .value();`}
               language="typescript"
             />
 
-            <h4 className="text-lg font-semibold text-white mt-6">Conditional Execution</h4>
+            <h4 className="text-lg font-semibold text-foreground mt-6">Conditional Execution</h4>
             <CodeBlock
-              code={`// Execute different branches based on conditions
-const result = getValue()
+              code={`import { asScope, also } from 'kotlinify-ts/scope';
+
+// Execute different branches based on conditions
+const result = asScope(getValue())
   .let(v => v > 10 ? v * 2 : v)
   .also(v => {
     if (v > 100) console.warn('Large value:', v);
@@ -609,7 +654,8 @@ const result = getValue()
       v.formatted = true;
       v.display = formatValue(v);
     }
-  });`}
+  })
+  .value();`}
               language="typescript"
             />
           </div>
@@ -617,47 +663,48 @@ const result = getValue()
 
         <DocsSection title="Quick Reference">
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-              <h4 className="text-slate-400 font-semibold mb-3">Returns Transformation Result</h4>
+            <div className="bg-card border border-border rounded-lg p-4">
+              <h4 className="text-muted-foreground font-semibold mb-3">Returns Transformation Result</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <code className="text-blue-300">let(value, fn)</code>
-                  <span className="text-gray-400">→ fn(value)</span>
+                  <code className="text-blue-600 dark:text-blue-400">letValue(value, fn)</code>
+                  <span className="text-muted-foreground">→ fn(value)</span>
                 </div>
                 <div className="flex justify-between">
-                  <code className="text-blue-300">run(value, fn)</code>
-                  <span className="text-gray-400">→ fn.call(value)</span>
+                  <code className="text-blue-600 dark:text-blue-400">run(value, fn)</code>
+                  <span className="text-muted-foreground">→ fn.call(value)</span>
                 </div>
                 <div className="flex justify-between">
-                  <code className="text-blue-300">withValue(value, fn)</code>
-                  <span className="text-gray-400">→ fn.call(value)</span>
+                  <code className="text-blue-600 dark:text-blue-400">withValue(value, fn)</code>
+                  <span className="text-muted-foreground">→ fn.call(value)</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-              <h4 className="text-slate-400 font-semibold mb-3">Returns Original Value</h4>
+            <div className="bg-card border border-border rounded-lg p-4">
+              <h4 className="text-muted-foreground font-semibold mb-3">Returns Original Value</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <code className="text-green-300">apply(value, fn)</code>
-                  <span className="text-gray-400">→ value</span>
+                  <code className="text-green-600 dark:text-green-400">apply(value, fn)</code>
+                  <span className="text-muted-foreground">→ value</span>
                 </div>
                 <div className="flex justify-between">
-                  <code className="text-green-300">also(value, fn)</code>
-                  <span className="text-gray-400">→ value</span>
+                  <code className="text-green-600 dark:text-green-400">also(value, fn)</code>
+                  <span className="text-muted-foreground">→ value</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-slate-600/10 to-pink-500/10 border border-slate-600/20 rounded-lg p-6 mt-6">
-            <h4 className="text-xl font-semibold text-white mb-3">Decision Tree</h4>
-            <div className="space-y-2 text-gray-300">
-              <p>• <strong className="text-slate-400">Need the transformed result?</strong> → Use <code className="text-blue-300">let</code></p>
-              <p>• <strong className="text-slate-400">Configuring an object?</strong> → Use <code className="text-green-300">apply</code></p>
-              <p>• <strong className="text-slate-400">Logging or side effects?</strong> → Use <code className="text-green-300">also</code></p>
-              <p>• <strong className="text-slate-400">Need 'this' context?</strong> → Use <code className="text-blue-300">run</code> or <code className="text-blue-300">withValue</code></p>
-              <p>• <strong className="text-slate-400">Handling nullable values?</strong> → Use <code className="text-yellow-300">*OrNull</code> variants</p>
+          <div className="bg-card border-l-4 border-l-blue-500 border border-border rounded-lg p-6 mt-6">
+            <h4 className="text-xl font-semibold text-foreground mb-3">Decision Tree</h4>
+            <div className="space-y-2 text-muted-foreground">
+              <p>• <strong className="text-muted-foreground">Need the transformed result?</strong> → Use <code className="text-blue-600 dark:text-blue-400">letValue</code> or <code className="text-blue-600 dark:text-blue-400">asScope().let()</code></p>
+              <p>• <strong className="text-muted-foreground">Configuring an object?</strong> → Use <code className="text-green-600 dark:text-green-400">apply</code></p>
+              <p>• <strong className="text-muted-foreground">Logging or side effects?</strong> → Use <code className="text-green-600 dark:text-green-400">also</code></p>
+              <p>• <strong className="text-muted-foreground">Need 'this' context?</strong> → Use <code className="text-blue-600 dark:text-blue-400">run</code> or <code className="text-blue-600 dark:text-blue-400">withValue</code></p>
+              <p>• <strong className="text-muted-foreground">Handling nullable values?</strong> → Use <code className="text-yellow-600 dark:text-yellow-400">*OrNull</code> variants</p>
+              <p>• <strong className="text-muted-foreground">Want method chaining?</strong> → Use <code className="text-purple-600 dark:text-purple-400">asScope()</code> for safe chaining</p>
             </div>
           </div>
         </DocsSection>
@@ -666,19 +713,19 @@ const result = getValue()
           <div className="flex gap-4 flex-wrap">
             <Link
               href="/docs/sequences"
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-800 text-white font-semibold rounded-lg transition-colors"
+              className="px-6 py-3 bg-foreground hover:bg-foreground/90 text-background font-semibold rounded-lg transition-colors"
             >
               Lazy Sequences →
             </Link>
             <Link
               href="/docs/flow"
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+              className="px-6 py-3 bg-foreground hover:bg-foreground/90 text-background font-semibold rounded-lg transition-colors"
             >
               Async Flow →
             </Link>
             <Link
               href="/docs/api-reference"
-              className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg border border-white/20 transition-colors"
+              className="px-6 py-3 bg-card hover:bg-card text-foreground font-semibold rounded-lg border border-border transition-colors"
             >
               API Reference
             </Link>

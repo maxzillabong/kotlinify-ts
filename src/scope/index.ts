@@ -80,11 +80,12 @@ class ScopeChainImpl<T> implements ScopeChain<T> {
   }
 }
 
-export function asScope<T>(value: T): ScopeChain<T> {
-  return new ScopeChainImpl(value)
+export function asScope<T>(value: T | Promise<T>): ScopeChain<Awaited<T>> {
+  if (value instanceof Promise) {
+    return new ScopeChainImpl(value as Awaited<T>)
+  }
+  return new ScopeChainImpl(value as Awaited<T>)
 }
-
-export { asScope as toScope, asScope as chain }
 
 declare global {
   interface Object {

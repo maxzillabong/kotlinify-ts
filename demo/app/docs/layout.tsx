@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X, Target, Zap, Waves, RefreshCw, Shield, Package, BookOpen, Smartphone, Server, Type, Hash, Clock, Repeat, CheckCircle2, Wrench, Puzzle } from "lucide-react";
+import { LogoMark } from "@/components/LogoMark";
 
 const navigation = [
   {
@@ -43,45 +44,62 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {/* Top Nav */}
-      <nav className="border-b border-white/10 backdrop-blur-sm bg-black/20 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
-            >
-              {sidebarOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
-            </button>
-            <Link href="/" className="flex items-center gap-2">
-              <img src="/logo.svg" alt="kotlinify-ts" className="w-8 h-8" />
-              <span className="text-xl font-bold text-white">kotlinify-ts</span>
-            </Link>
-          </div>
-          <div className="flex items-center gap-6">
-            <Link href="/docs" className="text-white">
-              Docs
-            </Link>
-            <a
-              href="https://github.com/maxzillabong/kotlinify-ts"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              GitHub
-            </a>
-          </div>
-        </div>
-      </nav>
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-background">
+      {/* Background effects matching landing page */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className="absolute inset-0 dark:hidden"
+          style={{ background: "radial-gradient(circle at top, rgba(179, 197, 255, 0.24) 0%, transparent 65%)" }}
+        />
+        <div className="hidden dark:block absolute left-1/2 top-[-20%] h-[120%] w-[120%] -translate-x-1/2 opacity-60 blur-3xl bg-gradient-to-br from-accent/20 via-transparent to-primary/20" />
+        <div className="hidden dark:block absolute left-[65%] top-[30%] h-[90%] w-[90%] opacity-40 blur-2xl bg-gradient-to-br from-primary/20 via-transparent to-accent/20" />
+      </div>
 
-      <div className="max-w-7xl mx-auto px-6 flex gap-8">
+      <div className="relative z-10 flex flex-1 flex-col">
+        {/* Top Nav */}
+        <nav className="sticky top-0 z-50 border-b border-border bg-background/75 backdrop-blur-xl">
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-5">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden p-2 hover:bg-muted rounded-lg transition-colors"
+              >
+                {sidebarOpen ? <X className="w-5 h-5 text-foreground" /> : <Menu className="w-5 h-5 text-foreground" />}
+              </button>
+              <Link href="/" className="flex items-center gap-3">
+                <LogoMark size={40} />
+                <div className="flex flex-col">
+                  <span className="text-sm uppercase tracking-widest text-muted-foreground">kotlinify</span>
+                  <span className="text-lg font-semibold text-foreground">Kotlin patterns for TypeScript</span>
+                </div>
+              </Link>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link href="/docs" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                Docs
+              </Link>
+              <Link href="/docs/api" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                API
+              </Link>
+              <a
+                href="https://github.com/maxzillabong/kotlinify-kt"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                GitHub
+              </a>
+            </div>
+          </div>
+        </nav>
+
+      <div className="mx-auto w-full max-w-7xl px-6 flex gap-8">
         {/* Sidebar - Desktop */}
-        <aside className="hidden lg:block w-64 py-8 sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto">
+        <aside className="hidden lg:block w-64 py-8 sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto">
           <nav className="space-y-8">
             {navigation.map((section) => (
               <div key={section.title}>
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   {section.title}
                 </h3>
                 <ul className="space-y-1">
@@ -91,9 +109,9 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                       <li key={item.href}>
                         <Link
                           href={item.href}
-                          className="flex items-center gap-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors group"
+                          className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-all group"
                         >
-                          <Icon className="w-4 h-4 text-slate-500 group-hover:text-slate-400" />
+                          <Icon className="w-4 h-4 text-muted-foreground/60 group-hover:text-muted-foreground" />
                           {item.name}
                         </Link>
                       </li>
@@ -109,15 +127,15 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         {sidebarOpen && (
           <>
             <div
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden animate-fadeIn"
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden animate-fadeIn"
               onClick={() => setSidebarOpen(false)}
             />
-            <aside className="fixed inset-y-0 left-0 w-64 bg-gray-900 z-50 lg:hidden overflow-y-auto border-r border-white/10 animate-slideInLeft">
+            <aside className="fixed inset-y-0 left-0 w-64 bg-card z-50 lg:hidden overflow-y-auto border-r border-border animate-slideInLeft">
               <div className="p-6">
                 <nav className="space-y-8">
                   {navigation.map((section) => (
                     <div key={section.title}>
-                      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                         {section.title}
                       </h3>
                       <ul className="space-y-1">
@@ -128,9 +146,9 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                               <Link
                                 href={item.href}
                                 onClick={() => setSidebarOpen(false)}
-                                className="flex items-center gap-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors group"
+                                className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-all group"
                               >
-                                <Icon className="w-4 h-4 text-slate-500 group-hover:text-slate-400" />
+                                <Icon className="w-4 h-4 text-muted-foreground/60 group-hover:text-muted-foreground" />
                                 {item.name}
                               </Link>
                             </li>
@@ -149,6 +167,39 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1 py-8 min-w-0">
           {children}
         </main>
+      </div>
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-card/50 backdrop-blur-sm mt-16">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} kotlinify-ts. Open source under MIT License.
+            </p>
+            <div className="flex items-center gap-6">
+              <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Documentation
+              </Link>
+              <a
+                href="https://github.com/maxzillabong/kotlinify-kt"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                GitHub
+              </a>
+              <a
+                href="https://github.com/maxzillabong/kotlinify-kt/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Issues
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
       </div>
     </div>
   );

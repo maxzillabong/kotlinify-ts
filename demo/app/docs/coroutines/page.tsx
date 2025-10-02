@@ -8,8 +8,8 @@ import { DocsSection } from "@/components/DocsSection";
 export default function CoroutinesPage() {
   return (
     <DocsPageLayout>
-      <h1 className="text-4xl font-bold text-white mb-6">Coroutines</h1>
-      <p className="text-xl text-gray-300 mb-12">
+      <h1 className="text-4xl font-bold text-foreground mb-6">Coroutines</h1>
+      <p className="text-xl text-muted-foreground mb-12">
         Finally, proper async cancellation without the AbortController nightmare. Manage complex async workflows with confidence, not chaos.
       </p>
 
@@ -18,8 +18,8 @@ export default function CoroutinesPage() {
           title="The Async Cancellation Crisis"
           description="You've lost hours debugging memory leaks from uncancelled requests. We've all been there."
         >
-          <div className="bg-red-900/10 border border-red-600/20 rounded-lg p-6 mb-6">
-            <h4 className="text-xl font-semibold text-red-400 mb-4">The JavaScript Reality: A House of Cards</h4>
+          <div className="bg-card border-l-4 border-l-red-500 border border-border rounded-lg p-6 mb-6">
+            <h4 className="text-xl font-semibold text-foreground mb-4">The JavaScript Reality: A House of Cards</h4>
             <CodeBlock
               code={`// The code every team writes... and regrets
 let cancelled = false;
@@ -63,8 +63,8 @@ async function loadDashboard() {
             />
           </div>
 
-          <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-lg p-6 mb-6">
-            <h4 className="text-xl font-semibold text-white mb-4">The Coroutine Solution: Structured Concurrency</h4>
+          <div className="bg-card border-l-4 border-l-blue-500 border border-border rounded-lg p-6 mb-6">
+            <h4 className="text-xl font-semibold text-foreground mb-4">The Coroutine Solution: Structured Concurrency</h4>
             <CodeBlock
               code={`import { coroutineScope, withTimeout, launch } from 'kotlinify-ts/coroutines';
 
@@ -73,9 +73,9 @@ async function loadDashboard() {
   return withTimeout(5000, () =>
     coroutineScope(async (scope) => {
       // Launch parallel operations - all automatically cancellable
-      const userJob = scope.async(() => fetch('/api/user'));
-      const analyticsJob = scope.async(() => fetch('/api/analytics'));
-      const notifJob = scope.async(() => fetch('/api/notifications'));
+      const userJob = scope.async(() => fetch('/api/user').then(r => r.json()));
+      const analyticsJob = scope.async(() => fetch('/api/analytics').then(r => r.json()));
+      const notifJob = scope.async(() => fetch('/api/notifications').then(r => r.json()));
 
       // If ANY fails or times out, ALL are cancelled
       // If the scope is cancelled, ALL are cancelled
@@ -93,16 +93,16 @@ async function loadDashboard() {
 }
 
 // Component unmounts?
-const job = launch(loadDashboard);
+const job = launch(() => loadDashboard());
 onUnmount(() => job.cancel()); // ONE line cancels EVERYTHING`}
               language="typescript"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="bg-yellow-900/10 border border-yellow-600/20 rounded-lg p-4">
-              <h4 className="text-yellow-400 font-semibold mb-2">The Hidden Costs of Bad Async</h4>
-              <ul className="space-y-2 text-gray-300 text-sm">
+            <div className="bg-card border-l-4 border-l-yellow-500 border border-border rounded-lg p-4">
+              <h4 className="text-foreground font-semibold mb-2">The Hidden Costs of Bad Async</h4>
+              <ul className="space-y-2 text-muted-foreground text-sm">
                 <li>• Memory leaks from uncancelled requests</li>
                 <li>• Race conditions from improper cleanup</li>
                 <li>• Zombie timers eating CPU cycles</li>
@@ -111,9 +111,9 @@ onUnmount(() => job.cancel()); // ONE line cancels EVERYTHING`}
                 <li>• Users complaining about slow, laggy apps</li>
               </ul>
             </div>
-            <div className="bg-green-900/10 border border-green-600/20 rounded-lg p-4">
-              <h4 className="text-green-400 font-semibold mb-2">What Coroutines Give You</h4>
-              <ul className="space-y-2 text-gray-300 text-sm">
+            <div className="bg-card border-l-4 border-l-green-500 border border-border rounded-lg p-4">
+              <h4 className="text-foreground font-semibold mb-2">What Coroutines Give You</h4>
+              <ul className="space-y-2 text-muted-foreground text-sm">
                 <li>• Automatic cancellation propagation</li>
                 <li>• Parent-child job relationships</li>
                 <li>• Built-in timeout handling</li>
@@ -129,8 +129,8 @@ onUnmount(() => job.cancel()); // ONE line cancels EVERYTHING`}
           title="Core Types"
           description="The building blocks of structured concurrency"
         >
-          <h3 className="text-xl font-semibold text-white mt-6 mb-3">Job</h3>
-          <p className="text-gray-300 mb-4">
+          <h3 className="text-xl font-semibold text-foreground mt-6 mb-3">Job</h3>
+          <p className="text-muted-foreground mb-4">
             A handle to a running coroutine that can be cancelled, joined, and monitored.
           </p>
           <CodeBlock
@@ -163,8 +163,8 @@ const job2 = launch(function() {
             language="typescript"
           />
 
-          <h3 className="text-xl font-semibold text-white mt-6 mb-3">Deferred</h3>
-          <p className="text-gray-300 mb-4">
+          <h3 className="text-xl font-semibold text-foreground mt-6 mb-3">Deferred</h3>
+          <p className="text-muted-foreground mb-4">
             A Job that produces a value - like a Promise with cancellation support.
           </p>
           <CodeBlock
@@ -188,8 +188,8 @@ const completed = deferred.getCompleted(); // undefined if not ready`}
             language="typescript"
           />
 
-          <h3 className="text-xl font-semibold text-white mt-6 mb-3">CoroutineScope</h3>
-          <p className="text-gray-300 mb-4">
+          <h3 className="text-xl font-semibold text-foreground mt-6 mb-3">CoroutineScope</h3>
+          <p className="text-muted-foreground mb-4">
             A scope that manages multiple coroutines and propagates cancellation.
           </p>
           <CodeBlock
@@ -224,10 +224,11 @@ await scope.joinAll();`}
             code={`import { launch, async, delay } from 'kotlinify-ts/coroutines';
 
 // launch: Fire-and-forget coroutine
-const job = launch(async function() {
+const job = launch(function() {
   console.log("Starting work");
-  await delay(1000);
-  console.log("Work complete");
+  delay(1000).then(() => {
+    console.log("Work complete");
+  });
 
   // Access job context via 'this'
   if (this.isActive) {
@@ -236,9 +237,8 @@ const job = launch(async function() {
 });
 
 // async: Coroutine that returns a value
-const deferred = async(async () => {
-  await delay(500);
-  return { id: 1, name: "User" };
+const deferred = async(() => {
+  return delay(500).then(() => ({ id: 1, name: "User" }));
 });
 
 const user = await deferred.await();
@@ -262,14 +262,16 @@ wrappedFetch.cancel(); // Can cancel even native promises!`}
 // coroutineScope: Waits for all children before returning
 const result = await coroutineScope(async (scope) => {
   // Launch parallel operations
-  scope.launch(async function() {
-    await delay(1000);
-    console.log("Operation 1 complete");
+  scope.launch(function() {
+    return delay(1000).then(() => {
+      console.log("Operation 1 complete");
+    });
   });
 
-  scope.launch(async function() {
-    await delay(500);
-    console.log("Operation 2 complete");
+  scope.launch(function() {
+    return delay(500).then(() => {
+      console.log("Operation 2 complete");
+    });
   });
 
   // This line executes immediately
@@ -282,14 +284,16 @@ const result = await coroutineScope(async (scope) => {
 // Error in child cancels all siblings
 try {
   await coroutineScope(async (scope) => {
-    scope.launch(async function() {
-      await delay(1000);
-      console.log("This won't print");
+    scope.launch(function() {
+      return delay(1000).then(() => {
+        console.log("This won't print");
+      });
     });
 
-    scope.launch(async function() {
-      await delay(100);
-      throw new Error("Failed!");
+    scope.launch(function() {
+      return delay(100).then(() => {
+        throw new Error("Failed!");
+      });
     });
   });
 } catch (e) {
@@ -298,13 +302,14 @@ try {
 
 // supervisorScope: Children fail independently
 await supervisorScope(async (scope) => {
-  scope.launch(async function() {
+  scope.launch(function() {
     throw new Error("Child 1 failed");
   });
 
-  scope.launch(async function() {
-    await delay(100);
-    console.log("Child 2 continues!"); // Still runs
+  scope.launch(function() {
+    return delay(100).then(() => {
+      console.log("Child 2 continues!"); // Still runs
+    });
   });
 });`}
             language="typescript"
@@ -320,9 +325,7 @@ await supervisorScope(async (scope) => {
 
 // withTimeout: Throws TimeoutError if exceeds time limit
 try {
-  const data = await withTimeout(5000, async () => {
-    return await fetchLargeDataset();
-  });
+  const data = await withTimeout(5000, () => fetchLargeDataset());
   console.log("Got data:", data);
 } catch (e) {
   if (e instanceof TimeoutError) {
@@ -331,9 +334,7 @@ try {
 }
 
 // withTimeoutOrNull: Returns null instead of throwing
-const result = await withTimeoutOrNull(3000, async () => {
-  return await slowOperation();
-});
+const result = await withTimeoutOrNull(3000, () => slowOperation());
 
 if (result === null) {
   console.log("Operation timed out, using cached data");
@@ -368,38 +369,44 @@ await coroutineScope(async (scope) => {
           description="Handle cancellation gracefully throughout your async operations"
         >
           <CodeBlock
-            code={`import { launch, delay, CancellationError } from 'kotlinify-ts/coroutines';
+            code={`import { launch, delay, CancellationError, coroutineScope } from 'kotlinify-ts/coroutines';
 
-// Parent cancellation propagates to children
-const parent = launch(async function() {
-  const child = launch(async function() {
-    try {
-      await delay(5000);
-      console.log("Child completed"); // Never runs
-    } catch (e) {
-      if (e instanceof CancellationError) {
-        console.log("Child was cancelled");
-      }
-    }
+// Parent-child relationships require a scope
+await coroutineScope(async (scope) => {
+  const parent = scope.launch(function() {
+    return coroutineScope(async (childScope) => {
+      const child = childScope.launch(function() {
+        return delay(5000).then(() => {
+          console.log("Child completed"); // Never runs if cancelled
+        }).catch(e => {
+          if (e instanceof CancellationError) {
+            console.log("Child was cancelled");
+          }
+        });
+      });
+
+      return delay(1000).then(() => {
+        parent.cancel(); // Cancels both parent and child
+      });
+    });
   });
-
-  await delay(1000);
-  this.cancel(); // Cancels both parent and child
 });
 
 // Check cancellation at critical points
-const job = launch(async function() {
-  const data = await fetchData();
-  this.ensureActive(); // Throws if cancelled
-
-  const processed = await processData(data);
-  this.ensureActive(); // Check again
-
-  await saveResults(processed);
+const job = launch(function() {
+  return fetchData()
+    .then(data => {
+      this.ensureActive(); // Throws if cancelled
+      return processData(data);
+    })
+    .then(processed => {
+      this.ensureActive(); // Check again
+      return saveResults(processed);
+    });
 });
 
 // Register cleanup callbacks
-const connection = launch(async function() {
+const connection = launch(function() {
   const ws = new WebSocket(url);
 
   this.onCancel(() => {
@@ -408,7 +415,7 @@ const connection = launch(async function() {
   });
 
   // Use connection...
-  await handleMessages(ws);
+  return handleMessages(ws);
 });
 
 // Later...
@@ -421,7 +428,7 @@ connection.cancel(); // Cleanup runs automatically`}
           title="Real-World Examples"
           description="Practical patterns for production applications"
         >
-          <h3 className="text-xl font-semibold text-white mt-6 mb-3">Parallel Data Loading</h3>
+          <h3 className="text-xl font-semibold text-foreground mt-6 mb-3">Parallel Data Loading</h3>
           <CodeBlock
             code={`import { coroutineScope, withTimeout } from 'kotlinify-ts/coroutines';
 
@@ -457,7 +464,7 @@ async function loadDashboard(userId: string) {
             language="typescript"
           />
 
-          <h3 className="text-xl font-semibold text-white mt-6 mb-3">Retry with Timeout</h3>
+          <h3 className="text-xl font-semibold text-foreground mt-6 mb-3">Retry with Timeout</h3>
           <CodeBlock
             code={`import { launch, delay, withTimeoutOrNull } from 'kotlinify-ts/coroutines';
 
@@ -475,7 +482,7 @@ async function fetchWithRetry<T>(
 
     if (attempt < maxRetries) {
       console.log(\`Attempt \${attempt} timed out, retrying...\`);
-      await delay(1000 * attempt); // Exponential backoff
+      await delay(1000 * attempt);
     }
   }
 
@@ -491,7 +498,7 @@ const data = await fetchWithRetry(
             language="typescript"
           />
 
-          <h3 className="text-xl font-semibold text-white mt-6 mb-3">Background Task Manager</h3>
+          <h3 className="text-xl font-semibold text-foreground mt-6 mb-3">Background Task Manager</h3>
           <CodeBlock
             code={`import { CoroutineScope, delay } from 'kotlinify-ts/coroutines';
 
@@ -499,21 +506,24 @@ class BackgroundTaskManager {
   private scope = new CoroutineScope();
 
   startPeriodicSync(intervalMs: number) {
-    return this.scope.launch(async function() {
-      while (this.isActive) {
-        try {
-          await syncData();
-          await delay(intervalMs);
-        } catch (error) {
-          console.error("Sync failed:", error);
-          await delay(5000); // Wait before retry
+    return this.scope.launch(function() {
+      const loop = async () => {
+        while (this.isActive) {
+          try {
+            await syncData();
+            await delay(intervalMs);
+          } catch (error) {
+            console.error("Sync failed:", error);
+            await delay(5000);
+          }
         }
-      }
+      };
+      return loop();
     });
   }
 
   startEventListener() {
-    return this.scope.launch(async function() {
+    return this.scope.launch(function() {
       const events = new EventSource('/events');
 
       this.onCancel(() => events.close());
@@ -523,6 +533,8 @@ class BackgroundTaskManager {
           handleEvent(JSON.parse(e.data));
         }
       };
+
+      return new Promise(() => {});
     });
   }
 
@@ -553,9 +565,10 @@ process.on('SIGTERM', () => manager.shutdown());`}
 
 // CancellationError: Thrown when a job is cancelled
 try {
-  const job = launch(async function() {
-    await delay(1000);
-    this.ensureActive(); // Throws if cancelled
+  const job = launch(function() {
+    return delay(1000).then(() => {
+      this.ensureActive(); // Throws if cancelled
+    });
   });
 
   job.cancel("User navigated away");
@@ -568,13 +581,10 @@ try {
 
 // TimeoutError: Thrown when operation exceeds time limit
 try {
-  await withTimeout(1000, async () => {
-    await delay(2000);
-  });
+  await withTimeout(1000, () => delay(2000));
 } catch (e) {
   if (e instanceof TimeoutError) {
     console.log("Operation timed out:", e.message);
-    // Contains: "Operation timed out after 1000ms"
   }
 }
 
@@ -602,32 +612,32 @@ async function robustFetch(url: string) {
         >
           <div className="space-y-4">
             <div>
-              <h4 className="text-lg font-semibold text-white mb-2">Use structured concurrency</h4>
-              <p className="text-gray-300">
+              <h4 className="text-lg font-semibold text-foreground mb-2">Use structured concurrency</h4>
+              <p className="text-muted-foreground">
                 Always use coroutineScope or supervisorScope when launching multiple coroutines.
                 This ensures proper cleanup and error propagation.
               </p>
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold text-white mb-2">Check cancellation in long operations</h4>
-              <p className="text-gray-300">
+              <h4 className="text-lg font-semibold text-foreground mb-2">Check cancellation in long operations</h4>
+              <p className="text-muted-foreground">
                 Call this.ensureActive() at critical points in long-running operations to
                 respect cancellation promptly.
               </p>
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold text-white mb-2">Register cleanup callbacks</h4>
-              <p className="text-gray-300">
+              <h4 className="text-lg font-semibold text-foreground mb-2">Register cleanup callbacks</h4>
+              <p className="text-muted-foreground">
                 Use this.onCancel() to ensure resources like connections, timers, and subscriptions
                 are properly cleaned up when a coroutine is cancelled.
               </p>
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold text-white mb-2">Prefer withTimeoutOrNull for optional operations</h4>
-              <p className="text-gray-300">
+              <h4 className="text-lg font-semibold text-foreground mb-2">Prefer withTimeoutOrNull for optional operations</h4>
+              <p className="text-muted-foreground">
                 Use withTimeoutOrNull when the operation is optional and you have a fallback.
                 Use withTimeout when timeout is an error condition.
               </p>
@@ -639,13 +649,13 @@ async function robustFetch(url: string) {
           <div className="flex gap-4">
             <Link
               href="/docs/monads"
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-800 text-white font-semibold rounded-lg transition-colors"
+              className="px-6 py-3 bg-foreground hover:bg-foreground/90 text-background font-semibold rounded-lg transition-colors"
             >
               Typed Errors →
             </Link>
             <Link
               href="/docs/flow"
-              className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg border border-white/20 transition-colors"
+              className="px-6 py-3 bg-card hover:bg-card text-foreground font-semibold rounded-lg border border-border transition-colors"
             >
               Flow Streams
             </Link>

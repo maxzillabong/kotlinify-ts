@@ -8,8 +8,8 @@ import { DocsSection } from "@/components/DocsSection";
 export default function FlowPage() {
   return (
     <DocsPageLayout>
-      <h1 className="text-4xl font-bold text-white mb-6">Flow Streams</h1>
-      <p className="text-xl text-gray-300 mb-12">
+      <h1 className="text-4xl font-bold text-foreground mb-6">Flow Streams</h1>
+      <p className="text-xl text-muted-foreground mb-12">
         RxJS is overkill for most apps. Get reactive programming that doesn't require a PhD to understand.
       </p>
 
@@ -18,8 +18,8 @@ export default function FlowPage() {
           title="The Reactive Programming Dilemma"
           description="You need reactive streams, but RxJS feels like bringing a spaceship to drive to work."
         >
-          <div className="bg-red-900/10 border border-red-600/20 rounded-lg p-6 mb-6">
-            <h4 className="text-xl font-semibold text-red-400 mb-4">The RxJS Learning Cliff</h4>
+          <div className="bg-card border-l-4 border-l-red-500 border border-border rounded-lg p-6 mb-6">
+            <h4 className="text-xl font-semibold text-foreground mb-4">The RxJS Learning Cliff</h4>
             <CodeBlock
               code={`// "Simple" WebSocket handling with RxJS
 import { webSocket } from 'rxjs/webSocket';
@@ -53,29 +53,34 @@ const socket$ = webSocket('ws://localhost:8080').pipe(
             />
           </div>
 
-          <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-lg p-6 mb-6">
-            <h4 className="text-xl font-semibold text-white mb-4">Flow: Reactive Programming for Humans</h4>
+          <div className="bg-card border-l-4 border-l-blue-500 border border-border rounded-lg p-6 mb-6">
+            <h4 className="text-xl font-semibold text-foreground mb-4">Flow: Reactive Programming for Humans</h4>
             <CodeBlock
-              code={`import { callbackFlow, retryWhen, delay } from 'kotlinify-ts/flow';
+              code={`import { callbackFlow } from 'kotlinify-ts/flow';
+import { delay } from 'kotlinify-ts/coroutines';
 
 // WebSocket with auto-reconnect - actually readable
 const socketFlow = callbackFlow<Message>(scope => {
   const ws = new WebSocket('ws://localhost:8080');
 
   ws.onmessage = (e) => scope.emit(JSON.parse(e.data));
-  ws.onerror = (e) => scope.error(e);
+  ws.onerror = () => ws.close();
   ws.onclose = () => scope.close();
 
   scope.onClose(() => ws.close());
-})
-.retryWhen((attempt, error) => {
-  console.log(\`Retry #\${attempt}: \${error.message}\`);
-  return attempt < 5; // Simple: retry up to 5 times
-})
-.delay(1000); // Wait 1s between retries
+});
+
+// Auto-retry with backoff
+const reliableSocket = socketFlow.retryWhen((error, attempt) => {
+  if (attempt < 5) {
+    console.log(\`Retry #\${attempt}: \${error.message}\`);
+    return delay(1000 * attempt).then(() => true);
+  }
+  return false;
+});
 
 // Use it - no PhD required
-await socketFlow
+await reliableSocket
   .filter(msg => msg.type === 'update')
   .map(msg => msg.data)
   .collect(data => updateUI(data));
@@ -87,27 +92,27 @@ await socketFlow
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-red-900/10 border border-red-600/20 rounded-lg p-4">
-              <h4 className="text-red-400 font-semibold mb-2">RxJS Complexity</h4>
-              <ul className="text-gray-300 text-sm space-y-1">
+            <div className="bg-card border-l-4 border-l-red-500 border border-border rounded-lg p-4">
+              <h4 className="text-foreground font-semibold mb-2">RxJS Complexity</h4>
+              <ul className="text-muted-foreground text-sm space-y-1">
                 <li>• 200+ operators to learn</li>
                 <li>• Subscription management</li>
                 <li>• Scheduler confusion</li>
                 <li>• Memory leak footguns</li>
               </ul>
             </div>
-            <div className="bg-yellow-900/10 border border-yellow-600/20 rounded-lg p-4">
-              <h4 className="text-yellow-400 font-semibold mb-2">Manual Event Handling</h4>
-              <ul className="text-gray-300 text-sm space-y-1">
+            <div className="bg-card border-l-4 border-l-yellow-500 border border-border rounded-lg p-4">
+              <h4 className="text-foreground font-semibold mb-2">Manual Event Handling</h4>
+              <ul className="text-muted-foreground text-sm space-y-1">
                 <li>• Callback hell returns</li>
                 <li>• No composition</li>
                 <li>• Manual cleanup everywhere</li>
                 <li>• State synchronization bugs</li>
               </ul>
             </div>
-            <div className="bg-green-900/10 border border-green-600/20 rounded-lg p-4">
-              <h4 className="text-green-400 font-semibold mb-2">Flow Balance</h4>
-              <ul className="text-gray-300 text-sm space-y-1">
+            <div className="bg-card border-l-4 border-l-green-500 border border-border rounded-lg p-4">
+              <h4 className="text-foreground font-semibold mb-2">Flow Balance</h4>
+              <ul className="text-muted-foreground text-sm space-y-1">
                 <li>• 30 intuitive operators</li>
                 <li>• Auto cleanup with scopes</li>
                 <li>• Built-in backpressure</li>
@@ -117,29 +122,29 @@ await socketFlow
           </div>
 
           <div className="bg-purple-900/10 border border-slate-700/20 rounded-lg p-6">
-            <h4 className="text-lg font-semibold text-slate-500 mb-3">Real-World Flow Use Cases</h4>
+            <h4 className="text-lg font-semibold text-muted-foreground mb-3">Real-World Flow Use Cases</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <h5 className="text-white font-medium mb-2">UI State Management</h5>
-                <p className="text-gray-300 text-sm">
+                <h5 className="text-foreground font-medium mb-2">UI State Management</h5>
+                <p className="text-muted-foreground text-sm">
                   StateFlow replaces Redux/MobX with 10× less boilerplate. One source of truth, automatic updates.
                 </p>
               </div>
               <div>
-                <h5 className="text-white font-medium mb-2">WebSocket Streams</h5>
-                <p className="text-gray-300 text-sm">
+                <h5 className="text-foreground font-medium mb-2">WebSocket Streams</h5>
+                <p className="text-muted-foreground text-sm">
                   Handle real-time data with automatic reconnection, buffering, and error recovery.
                 </p>
               </div>
               <div>
-                <h5 className="text-white font-medium mb-2">Event Processing</h5>
-                <p className="text-gray-300 text-sm">
+                <h5 className="text-foreground font-medium mb-2">Event Processing</h5>
+                <p className="text-muted-foreground text-sm">
                   Debounce searches, throttle scrolls, combine user inputs - without the complexity.
                 </p>
               </div>
               <div>
-                <h5 className="text-white font-medium mb-2">Data Pipelines</h5>
-                <p className="text-gray-300 text-sm">
+                <h5 className="text-foreground font-medium mb-2">Data Pipelines</h5>
+                <p className="text-muted-foreground text-sm">
                   Transform API responses through multiple stages with backpressure handling.
                 </p>
               </div>
@@ -738,8 +743,8 @@ await combine(
         >
           <div className="space-y-4">
             <div className="bg-green-900/20 border border-green-700 rounded-lg p-4">
-              <h4 className="text-green-400 font-semibold mb-2">✓ Do</h4>
-              <ul className="text-gray-300 space-y-1 text-sm">
+              <h4 className="text-foreground font-semibold mb-2">✓ Do</h4>
+              <ul className="text-muted-foreground space-y-1 text-sm">
                 <li>• Use StateFlow for UI state that needs current value access</li>
                 <li>• Use SharedFlow for events without state</li>
                 <li>• Apply backpressure strategies (buffer, conflate, sample) for high-frequency streams</li>
@@ -749,8 +754,8 @@ await combine(
               </ul>
             </div>
             <div className="bg-red-900/20 border border-red-700 rounded-lg p-4">
-              <h4 className="text-red-400 font-semibold mb-2">✗ Don't</h4>
-              <ul className="text-gray-300 space-y-1 text-sm">
+              <h4 className="text-foreground font-semibold mb-2">✗ Don't</h4>
+              <ul className="text-muted-foreground space-y-1 text-sm">
                 <li>• Don't forget to handle errors with catch()</li>
                 <li>• Don't create flows in tight loops</li>
                 <li>• Don't ignore backpressure in high-frequency streams</li>
@@ -765,28 +770,28 @@ await combine(
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link
               href="/docs/coroutines"
-              className="p-4 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-all"
+              className="p-4 bg-card hover:bg-card rounded-lg border border-border transition-all"
             >
-              <h3 className="text-white font-semibold mb-2">Coroutines</h3>
-              <p className="text-gray-400 text-sm">
+              <h3 className="text-foreground font-semibold mb-2">Coroutines</h3>
+              <p className="text-muted-foreground text-sm">
                 Structured concurrency for managing Flow lifecycles
               </p>
             </Link>
             <Link
               href="/docs/sequences"
-              className="p-4 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-all"
+              className="p-4 bg-card hover:bg-card rounded-lg border border-border transition-all"
             >
-              <h3 className="text-white font-semibold mb-2">Sequences</h3>
-              <p className="text-gray-400 text-sm">
+              <h3 className="text-foreground font-semibold mb-2">Sequences</h3>
+              <p className="text-muted-foreground text-sm">
                 Lazy synchronous sequences for data transformation
               </p>
             </Link>
             <Link
               href="/docs/channels"
-              className="p-4 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-all"
+              className="p-4 bg-card hover:bg-card rounded-lg border border-border transition-all"
             >
-              <h3 className="text-white font-semibold mb-2">Channels</h3>
-              <p className="text-gray-400 text-sm">
+              <h3 className="text-foreground font-semibold mb-2">Channels</h3>
+              <p className="text-muted-foreground text-sm">
                 Communication primitives for coroutines
               </p>
             </Link>
