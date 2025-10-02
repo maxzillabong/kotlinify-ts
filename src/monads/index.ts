@@ -472,55 +472,31 @@ export class NonEmptyList<T> extends Array<T> {
 
 export type EitherNel<E, A> = Either<NonEmptyList<E>, A>
 
-export function zipOrAccumulate<E, A, B>(
-  a: Either<E, A>,
-  b: Either<E, B>
-): Either<NonEmptyList<E>, [A, B]> {
-  if (a.isRight && b.isRight) {
-    return Right([a.getRight(), b.getRight()])
-  }
-
-  const errors: E[] = []
-  if (a.isLeft) errors.push(a.getLeft())
-  if (b.isLeft) errors.push(b.getLeft())
-
-  return Left(NonEmptyList.of(errors[0], ...errors.slice(1)))
+type ExtractRights<T extends readonly Either<unknown, unknown>[]> = {
+  [K in keyof T]: T[K] extends Either<unknown, infer R> ? R : never
 }
 
-export function zipOrAccumulate3<E, A, B, C>(
-  a: Either<E, A>,
-  b: Either<E, B>,
-  c: Either<E, C>
-): Either<NonEmptyList<E>, [A, B, C]> {
-  if (a.isRight && b.isRight && c.isRight) {
-    return Right([a.getRight(), b.getRight(), c.getRight()])
+type ExtractLefts<T extends readonly Either<unknown, unknown>[]> = T[number] extends Either<infer E, unknown> ? E : never
+
+export function zipOrAccumulate<E extends readonly Either<unknown, unknown>[]>(
+  ...eithers: E
+): Either<NonEmptyList<ExtractLefts<E>>, ExtractRights<E>> {
+  const errors: unknown[] = []
+  const values: unknown[] = []
+
+  for (const either of eithers) {
+    if (either.isLeft) {
+      errors.push(either.getLeft())
+    } else {
+      values.push(either.getRight())
+    }
   }
 
-  const errors: E[] = []
-  if (a.isLeft) errors.push(a.getLeft())
-  if (b.isLeft) errors.push(b.getLeft())
-  if (c.isLeft) errors.push(c.getLeft())
-
-  return Left(NonEmptyList.of(errors[0], ...errors.slice(1)))
-}
-
-export function zipOrAccumulate4<E, A, B, C, D>(
-  a: Either<E, A>,
-  b: Either<E, B>,
-  c: Either<E, C>,
-  d: Either<E, D>
-): Either<NonEmptyList<E>, [A, B, C, D]> {
-  if (a.isRight && b.isRight && c.isRight && d.isRight) {
-    return Right([a.getRight(), b.getRight(), c.getRight(), d.getRight()])
+  if (errors.length > 0) {
+    return Left(NonEmptyList.of(errors[0], ...errors.slice(1))) as Either<NonEmptyList<ExtractLefts<E>>, ExtractRights<E>>
   }
 
-  const errors: E[] = []
-  if (a.isLeft) errors.push(a.getLeft())
-  if (b.isLeft) errors.push(b.getLeft())
-  if (c.isLeft) errors.push(c.getLeft())
-  if (d.isLeft) errors.push(d.getLeft())
-
-  return Left(NonEmptyList.of(errors[0], ...errors.slice(1)))
+  return Right(values) as Either<NonEmptyList<ExtractLefts<E>>, ExtractRights<E>>
 }
 
 export function mapOrAccumulate<E, A, B>(

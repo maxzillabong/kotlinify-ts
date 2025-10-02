@@ -37,7 +37,7 @@ export class Schedule<Input, Output> {
       cont: true,
       delay: curr,
       state: { prev: curr, curr: prev + curr },
-    })) as any
+    })) as unknown as Schedule<A, number>
   }
 
   static spaced<A = unknown>(delay: number): Schedule<A, number> {
@@ -57,7 +57,7 @@ export class Schedule<Input, Output> {
   }
 
   static identity<A>(): Schedule<A, A> {
-    return new Schedule(null as any, (input) => ({
+    return new Schedule(null as unknown as A, (input) => ({
       cont: true,
       delay: 0,
       state: input,
@@ -156,7 +156,7 @@ export class Schedule<Input, Output> {
           state: { tag: 'second' as const, state: decision.state },
         }
       }
-    ) as any
+    ) as unknown as Schedule<Input, Output | B>
   }
 
   zipLeft<B>(other: Schedule<Input, B>): Schedule<Input, Output> {
@@ -168,9 +168,10 @@ export class Schedule<Input, Output> {
   }
 
   map<B>(fn: (output: Output) => B): Schedule<Input, B> {
+    let origState = this.initial
     return new Schedule(fn(this.initial), (input, prevMapped) => {
-      const origState = this.initial
-      const decision = this.update(input, origState as any)
+      const decision = this.update(input, origState)
+      origState = decision.state
       return {
         cont: decision.cont,
         delay: decision.delay,

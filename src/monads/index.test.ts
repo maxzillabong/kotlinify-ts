@@ -11,8 +11,6 @@ import {
   Failure,
   NonEmptyList,
   zipOrAccumulate,
-  zipOrAccumulate3,
-  zipOrAccumulate4,
   mapOrAccumulate,
 } from './index'
 
@@ -489,5 +487,64 @@ describe('interoperability', () => {
       .getRight()
 
     expect(result).toBe(20)
+  })
+})
+
+describe('zipOrAccumulate', () => {
+  it('accumulates all successes', () => {
+    const result = zipOrAccumulate(
+      Right<string, number>(1),
+      Right<string, string>('hello'),
+      Right<string, boolean>(true)
+    )
+
+    expect(result.isRight).toBe(true)
+    expect(result.getRight()).toEqual([1, 'hello', true])
+  })
+
+  it('accumulates all errors', () => {
+    const result = zipOrAccumulate(
+      Left<string, number>('error1'),
+      Left<string, string>('error2'),
+      Left<string, boolean>('error3')
+    )
+
+    expect(result.isLeft).toBe(true)
+    const errors = result.getLeft()
+    expect(errors.length).toBe(3)
+    expect(errors).toEqual(['error1', 'error2', 'error3'])
+  })
+
+  it('accumulates mixed results as errors', () => {
+    const result = zipOrAccumulate(
+      Right<string, number>(1),
+      Left<string, string>('error2'),
+      Right<string, boolean>(true),
+      Left<string, number>('error4')
+    )
+
+    expect(result.isLeft).toBe(true)
+    const errors = result.getLeft()
+    expect(errors.length).toBe(2)
+    expect(errors).toEqual(['error2', 'error4'])
+  })
+
+  it('preserves types across different types', () => {
+    const result = zipOrAccumulate(
+      Right<string, number>(42),
+      Right<string, { name: string }>({ name: 'Alice' })
+    )
+
+    expect(result.isRight).toBe(true)
+    const [num, obj] = result.getRight()
+    expect(num).toBe(42)
+    expect(obj.name).toBe('Alice')
+  })
+
+  it('works with single either', () => {
+    const result = zipOrAccumulate(Right<string, number>(42))
+
+    expect(result.isRight).toBe(true)
+    expect(result.getRight()).toEqual([42])
   })
 })

@@ -57,16 +57,16 @@ describe('Schedule', () => {
 
       const schedule = Schedule.exponential(100, 2)
 
-      await expect(async () => {
-        await schedule.retry(async () => {
-          attempts++
-          if (attempts > 1) {
-            delays.push(Date.now())
-          }
-          if (attempts <= 3) throw new Error('Retry')
-          return 'done'
-        })
-      }).resolves.toBe('done')
+      const result = await schedule.retry(async () => {
+        attempts++
+        if (attempts > 1) {
+          delays.push(Date.now())
+        }
+        if (attempts <= 3) throw new Error('Retry')
+        return 'done'
+      })
+
+      expect(result).toBe('done')
 
       expect(attempts).toBe(4)
     })
