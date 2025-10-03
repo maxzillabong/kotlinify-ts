@@ -306,14 +306,6 @@ const result = await asScope(await fetchData())
   .value();
 ```
 
-## What Developers Are Saying
-
-> "We replaced 10,000 lines of imperative code with 2,000 lines of kotlinify. Bugs dropped 75%." - Senior Engineer, Fortune 500
-
-> "Sequences alone saved us $50k/month in compute costs by eliminating unnecessary processing." - CTO, Data Analytics Startup
-
-> "It's like having Kotlin's entire standard library in TypeScript. Game changer." - Tech Lead, Mobile Team
-
 ## Full API Documentation
 
 Visit our comprehensive documentation site at [kotlinify.dev](https://maxzillabong.github.io/kotlinify-ts)

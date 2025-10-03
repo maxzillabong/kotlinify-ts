@@ -90,19 +90,6 @@ const highlights: Array<{
   },
 ];
 
-const testimonials = [
-  {
-    quote:
-      "kotlinify brings the best parts of Kotlin to TypeScript. Scope helpers and monads keep our codebases consistent across platforms.",
-    author: "Product Engineering Lead",
-  },
-  {
-    quote:
-      "Moving reactive pipelines to Flow cut cognitive load. The coroutine-style cancellation is a perfect fit for React apps.",
-    author: "Frontend Staff Engineer",
-  },
-];
-
 const FeatureCard = ({ icon: Icon, title, description, href }: (typeof features)[number]) => (
   <Link
     href={href}
@@ -248,23 +235,6 @@ export default function Home() {
               <div className="mt-10 grid w-full gap-6 md:grid-cols-3">
                 {highlights.map((highlight) => (
                   <Highlight key={highlight.title} {...highlight} />
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <section className="px-6 pb-24">
-            <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 text-center">
-              <h2 className="text-3xl font-semibold text-foreground md:text-4xl">Trusted by teams shipping fast</h2>
-              <div className="grid gap-6">
-                {testimonials.map(({ quote, author }) => (
-                  <blockquote
-                    key={author}
-                    className="rounded-2xl border border-border bg-card p-8 text-left shadow-sm"
-                  >
-                    <p className="text-lg italic text-foreground">“{quote}”</p>
-                    <cite className="mt-4 block text-sm font-medium text-muted-foreground">{author}</cite>
-                  </blockquote>
                 ))}
               </div>
             </div>
