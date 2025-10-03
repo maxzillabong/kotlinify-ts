@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Flow — Kotlinify</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.35), transparent 60%),
+          radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.35), transparent 55%),
+          #020617;
+        font-family: 'Inter', system-ui, sans-serif;
+        color: #e2e8f0;
+        padding: 32px;
+      }
+      main {
+        width: min(720px, 90vw);
+        background: rgba(15, 23, 42, 0.92);
+        border-radius: 20px;
+        padding: 32px;
+        box-shadow: 0 24px 80px rgba(14, 116, 144, 0.35);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 2.1rem;
+      }
+      pre {
+        min-height: 160px;
+        background: rgba(2, 6, 23, 0.55);
+        border-radius: 14px;
+        padding: 18px;
+        overflow: auto;
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-weight: 600;
+        cursor: pointer;
+        color: #020617;
+        background: linear-gradient(135deg, #38bdf8, #818cf8);
+        margin-top: 18px;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Streaming Metrics with Flow</h1>
+      <p>
+        Watch how Kotlinify Flow composes backpressure-friendly transforms to smooth noisy telemetry
+        into actionable insights right in your browser.
+      </p>
+      <pre id="output">Click "Start Stream" to begin collecting metrics…</pre>
+      <button id="run">Start Stream</button>
+    </main>
+    <script src="https://unpkg.com/kotlinify-ts@latest/dist/index.global.js"></script>
+    <script>
+      const { flow } = kotlinify;
+      const output = document.getElementById('output');
+      const runButton = document.getElementById('run');
+
+      const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+      function log(message) {
+        output.textContent += `\n${message}`;
+        output.scrollTop = output.scrollHeight;
+      }
+
+      runButton.addEventListener('click', async () => {
+        runButton.disabled = true;
+        output.textContent = 'Streaming metrics…';
+        const samples = Array.from({ length: 12 }, (_, i) => ({
+          cpu: 35 + Math.random() * 50,
+          mem: 42 + Math.random() * 40,
+          ts: new Date(Date.now() + i * 250).toLocaleTimeString(),
+        }));
+
+        const metricsFlow = flow(async (emit) => {
+          for (const sample of samples) {
+            await delay(250);
+            await emit(sample);
+          }
+        })
+          .map((sample) => ({
+            ...sample,
+            health: sample.cpu < 70 && sample.mem < 70 ? 'healthy' : 'degraded',
+          }));
+
+        await metricsFlow
+          .onEach(async (sample) => {
+            await delay(80);
+            log(`${sample.ts} — cpu: ${sample.cpu.toFixed(1)}%, mem: ${sample.mem.toFixed(1)}% => ${sample.health}`);
+          })
+          .catch((err) => log(`stream error: ${err.message}`))
+          .collect(() => {});
+
+        log('\nStream complete!');
+        runButton.disabled = false;
+      });
+    </script>
+  </body>
+</html>

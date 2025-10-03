@@ -15,8 +15,8 @@ Welcome to the complete documentation for kotlinify-ts - bringing Kotlin's belov
 - **[Server-Side Guide](./SERVER_SIDE_GUIDE.md)** - Node.js, Express, backend applications
 
 ### Examples & Tutorials
-- [Examples Directory](../examples/) - Real-world code examples
-- [Demo Application](../demo/) - Interactive landing page with live examples
+- [Examples Directory](../examples/) - Real-world code examples you can open directly in the browser
+- [Documentation Site](https://maxzillabong.github.io/kotlinify-ts) - GitHub Pages deployment powered by the demo app
 
 ---
 
@@ -544,8 +544,8 @@ MIT License - see [LICENSE](../LICENSE) for details.
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/kotlinify-ts/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/kotlinify-ts/discussions)
+- **Issues**: [GitHub Issues](https://github.com/maxzillabong/kotlinify-ts/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/maxzillabong/kotlinify-ts/discussions)
 - **Discord**: [Join our Discord](https://discord.gg/kotlinify-ts)
 
 ---

@@ -1,17 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import {
-  Option,
   Some,
   None,
-  Either,
   Left,
   Right,
-  Result,
   Success,
   Failure,
-  NonEmptyList,
   zipOrAccumulate,
-  mapOrAccumulate,
 } from './index'
 
 describe('Option', () => {

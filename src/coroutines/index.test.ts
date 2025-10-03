@@ -136,6 +136,7 @@ describe('launch', () => {
     let jobContext: Job | undefined
 
     const job = launch(function () {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       jobContext = this
     })
 
@@ -308,16 +309,15 @@ describe('coroutineScope', () => {
   })
 
   it('cancels children on error', async () => {
-    const scope = new CoroutineScope()
     let childCancelled = false
 
     try {
       await coroutineScope((s) => {
-        s.launch(async function () {
-          this.onCancel(() => {
-            childCancelled = true
-          })
+        const child = s.launch(async () => {
           await delay(100)
+        })
+        child.onCancel(() => {
+          childCancelled = true
         })
 
         throw new Error('parent error')

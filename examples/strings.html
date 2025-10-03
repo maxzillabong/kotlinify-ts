@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Strings — Kotlinify</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+        font-family: 'Inter', system-ui, sans-serif;
+        background: linear-gradient(135deg, #fdf2f8, #eff6ff 60%, #dbeafe);
+        color: #1f2937;
+      }
+      main {
+        width: min(760px, 94vw);
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 24px;
+        padding: 34px;
+        box-shadow: 0 28px 90px rgba(99, 102, 241, 0.25);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 2.2rem;
+      }
+      p {
+        margin: 0 0 20px;
+        opacity: 0.7;
+      }
+      textarea {
+        width: 100%;
+        min-height: 120px;
+        border-radius: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.5);
+        padding: 16px;
+        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo;
+        font-size: 0.95rem;
+        background: rgba(248, 250, 252, 0.9);
+        resize: vertical;
+      }
+      pre {
+        background: #111827;
+        color: #e2e8f0;
+        border-radius: 16px;
+        padding: 18px;
+        margin: 0;
+        white-space: pre-wrap;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-weight: 600;
+        cursor: pointer;
+        color: #fff7ed;
+        background: linear-gradient(135deg, #ec4899, #6366f1);
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Story Builder with Kotlinify Strings</h1>
+      <p>Paste messy copy, hit format, and watch Kotlin-style helpers polish it instantly.</p>
+      <textarea id="input" spellcheck="false">    |Hello hero,
+    |  welcome to the  mission control center.
+    |We'll launch       in t-minus  15.
+
+    --Commander
+      </textarea>
+      <button id="run">Format Story</button>
+      <pre id="output">Waiting for input…</pre>
+    </main>
+    <!-- Strings helpers live in the dedicated module build -->
+    <script src="https://unpkg.com/kotlinify-ts@latest/dist/strings.global.js"></script>
+    <script>
+      const {
+        trimIndent,
+        trimMargin,
+        padStart,
+        padEnd,
+        capitalize,
+        commonPrefix,
+        removeSurrounding,
+        lines,
+        repeat: repeatString,
+      } = kotlinify;
+
+      document.getElementById('run').addEventListener('click', () => {
+        const raw = document.getElementById('input').value;
+
+        const normalized = trimIndent(trimMargin(raw));
+        const cleanedLines = lines(normalized)
+          .map((line) => line.replace(/\s+/g, ' ').trim())
+          .filter((line) => line.length > 0);
+
+        const subject = capitalize(cleanedLines[0]);
+        const body = cleanedLines.slice(1, -1).join('\n');
+        const signature = cleanedLines[cleanedLines.length - 1];
+
+        const branded = removeSurrounding(signature, '--');
+        const border = repeatString('-', Math.min(60, Math.max(20, body.length / 1.5))).slice(0, 40);
+
+        const prefix = commonPrefix(subject, body.split('\n')[0] ?? subject);
+
+        const final = [
+          border,
+          padStart(subject, subject.length + 2),
+          '',
+          padEnd(body, body.length + 2),
+          '',
+          `Shared intro: ${prefix}`,
+          `Signed by: ${branded}`,
+          border,
+        ].join('\n');
+
+        document.getElementById('output').textContent = final;
+      });
+    </script>
+  </body>
+</html>

@@ -106,7 +106,7 @@ export class Channel<T> implements SendChannel<T>, ReceiveChannel<T> {
     this.receivers = []
   }
 
-  cancel(_reason?: string): void {
+  cancel(_?: string): void {
     if (this._cancelled) return
     this._cancelled = true
     this._closed = true

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Scope Functions — Kotlinify</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #0f172a, #1e293b 55%, #312e81);
+        display: grid;
+        place-items: center;
+        padding: 32px;
+        font-family: 'Inter', system-ui, sans-serif;
+        color: #f1f5f9;
+      }
+      main {
+        width: min(720px, 92vw);
+        background: rgba(15, 23, 42, 0.9);
+        border-radius: 24px;
+        padding: 32px;
+        box-shadow: 0 32px 90px rgba(49, 46, 129, 0.35);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 2.2rem;
+      }
+      p {
+        margin: 0 0 20px;
+        opacity: 0.85;
+      }
+      pre {
+        background: rgba(30, 41, 59, 0.86);
+        border-radius: 18px;
+        padding: 20px;
+        margin: 0;
+        white-space: pre-wrap;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-weight: 600;
+        cursor: pointer;
+        background: linear-gradient(135deg, #f43f5e, #ec4899);
+        color: #fff7ed;
+        margin-top: 22px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Scope Functions: Build Objects with Intent</h1>
+      <p>
+        Compose configuration objects without temp variables or mutation leakage. Kotlinify scope
+        helpers keep every transformation scoped and expressive.
+      </p>
+      <pre id="output">Click "Generate Dashboard Config" to build the object.</pre>
+      <button id="run">Generate Dashboard Config</button>
+    </main>
+    <script src="https://unpkg.com/kotlinify-ts@latest/dist/index.global.js"></script>
+    <script>
+      const { asScope, let: letValue, apply, also } = kotlinify;
+      const runButton = document.getElementById('run');
+      const output = document.getElementById('output');
+
+      runButton.addEventListener('click', () => {
+        const config = asScope({
+          widgets: [],
+          theme: 'dark',
+          filters: {},
+        })
+          .apply((draft) => {
+            draft.widgets.push('burn-rate', 'latency-breakdown', 'deployment-feed');
+          })
+          .also((draft) => {
+            draft.lastGenerated = new Date().toISOString();
+          })
+          .let((draft) => ({
+            ...draft,
+            filters: letValue(['prod', 'staging'], (clusters) => ({
+              clusters,
+              region: 'global',
+            })),
+          }))
+          .run(function () {
+            return {
+              ...this,
+              title: `Site Reliability — ${this.filters.clusters.join(' & ')}`,
+            };
+          })
+          .value();
+
+        output.textContent = JSON.stringify(config, null, 2);
+      });
+    </script>
+  </body>
+</html>

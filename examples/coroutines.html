@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Coroutines — Kotlinify</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #111827, #1f2937);
+        font-family: 'Inter', system-ui, sans-serif;
+        color: #f9fafb;
+        padding: 32px;
+      }
+      main {
+        width: min(720px, 92vw);
+        background: rgba(17, 24, 39, 0.92);
+        border-radius: 22px;
+        padding: 34px;
+        box-shadow: 0 30px 90px rgba(15, 23, 42, 0.45);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 2.1rem;
+      }
+      p {
+        margin: 0 0 18px;
+        opacity: 0.85;
+        line-height: 1.6;
+      }
+      pre {
+        background: rgba(31, 41, 55, 0.85);
+        border-radius: 14px;
+        padding: 18px;
+        min-height: 160px;
+        overflow: auto;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-weight: 600;
+        cursor: pointer;
+        background: linear-gradient(135deg, #34d399, #22d3ee);
+        color: #022c22;
+        margin-top: 18px;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Structured Concurrency in the Browser</h1>
+      <p>
+        Launch independent jobs, await deferred computations, and fan-in the results without losing
+        control. Kotlinify coroutines make orchestration a breeze.
+      </p>
+      <pre id="output">Click "Run Deployment" to orchestrate parallel tasks…</pre>
+      <button id="run">Run Deployment</button>
+    </main>
+    <script src="https://unpkg.com/kotlinify-ts@latest/dist/index.global.js"></script>
+    <script>
+      const { coroutineScope, delay } = kotlinify;
+      const runButton = document.getElementById('run');
+      const output = document.getElementById('output');
+
+      const log = (message) => {
+        output.textContent += `\n${message}`;
+        output.scrollTop = output.scrollHeight;
+      };
+
+      runButton.addEventListener('click', async () => {
+        runButton.disabled = true;
+        output.textContent = 'Spinning up blue/green deployment…';
+
+        const summary = await coroutineScope(async (scope) => {
+          const deployed = [];
+
+          const build = scope.launch(async function () {
+            log('🛠️  Build service: compiling assets');
+            await delay(300);
+            log('🛠️  Build service: running tests');
+            await delay(400);
+            log('✅ Build service: artifact ready');
+          });
+
+          const provision = scope.launch(async function () {
+            log('☁️  Provision infra: allocating containers');
+            await delay(250);
+            log('☁️  Provision infra: warming instances');
+            await delay(500);
+            log('✅ Provision infra: capacity ready');
+          });
+
+          const healthCheck = scope.async(async () => {
+            await delay(950);
+            log('🔍 Running smoke tests on cluster');
+            await delay(350);
+            const checks = [
+              { endpoint: '/health', status: 200 },
+              { endpoint: '/metrics', status: 200 },
+              { endpoint: '/login', status: 200 },
+            ];
+            return checks;
+          });
+
+          deployed.push(build, provision);
+          await Promise.all(deployed.map((job) => job.join()));
+          const checks = await healthCheck.await();
+
+          log('📦 Rolling traffic to new version…');
+          await delay(300);
+
+          return {
+            version: '2025.02.14',
+            totalChecks: checks.length,
+            allHealthy: checks.every((c) => c.status === 200),
+          };
+        });
+
+        log(`\n🚀 Deployment ${summary.version} complete (${summary.totalChecks} checks, healthy: ${summary.allHealthy})`);
+        runButton.disabled = false;
+      });
+    </script>
+  </body>
+</html>

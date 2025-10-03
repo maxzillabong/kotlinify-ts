@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Channels — Kotlinify</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 32px;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at top, rgba(56, 189, 248, 0.3), transparent 60%),
+          radial-gradient(circle at bottom, rgba(14, 165, 233, 0.2), transparent 50%),
+          #0f172a;
+        font-family: 'Inter', system-ui, sans-serif;
+        color: #e2e8f0;
+      }
+      main {
+        width: min(760px, 92vw);
+        background: rgba(15, 23, 42, 0.88);
+        border-radius: 22px;
+        padding: 30px;
+        box-shadow: 0 28px 80px rgba(15, 118, 110, 0.35);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 2.2rem;
+      }
+      p {
+        margin: 0 0 18px;
+        opacity: 0.85;
+      }
+      .panels {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+      .panel {
+        background: rgba(30, 41, 59, 0.86);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      h2 {
+        margin: 0 0 10px;
+        font-size: 1.2rem;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-weight: 600;
+        cursor: pointer;
+        color: #022c22;
+        background: linear-gradient(135deg, #5eead4, #38bdf8);
+        margin-top: 22px;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Broadcast Channels for Real-Time Fan-Out</h1>
+      <p>
+        A single stream powers multiple dashboards. Channels make it effortless to fan out updates with
+        backpressure-friendly semantics.
+      </p>
+      <div class="panels">
+        <section class="panel">
+          <h2>Sales Dashboard</h2>
+          <ul id="sales"></ul>
+        </section>
+        <section class="panel">
+          <h2>Operations Dashboard</h2>
+          <ul id="ops"></ul>
+        </section>
+      </div>
+      <button id="run">Stream Orders</button>
+    </main>
+    <script src="https://unpkg.com/kotlinify-ts@latest/dist/index.global.js"></script>
+    <script>
+      const { BroadcastChannel, consumeEach, delay } = kotlinify;
+      const orders = [
+        { id: 'A-1042', total: 420, region: 'NA' },
+        { id: 'A-1043', total: 265, region: 'EU' },
+        { id: 'A-1044', total: 1280, region: 'APAC' },
+        { id: 'A-1045', total: 980, region: 'LATAM' },
+      ];
+
+      const salesList = document.getElementById('sales');
+      const opsList = document.getElementById('ops');
+      const runButton = document.getElementById('run');
+
+      const renderItem = (node, content) => {
+        const item = document.createElement('li');
+        item.textContent = content;
+        node.appendChild(item);
+      };
+
+      runButton.addEventListener('click', async () => {
+        runButton.disabled = true;
+        salesList.innerHTML = '';
+        opsList.innerHTML = '';
+
+        const channel = new BroadcastChannel();
+        const salesFeed = channel.openSubscription();
+        const opsFeed = channel.openSubscription();
+
+        const subscriptions = [
+          consumeEach(salesFeed, (order) =>
+            renderItem(salesList, `Order ${order.id} → $${order.total}`)
+          ),
+          consumeEach(opsFeed, async (order) => {
+            await delay(120);
+            renderItem(opsList, `${order.id} staging ${order.region} warehouse ready`);
+          }),
+        ];
+
+        for (const order of orders) {
+          await delay(260);
+          await channel.send(order);
+        }
+        channel.close();
+
+        await Promise.all(subscriptions);
+        renderItem(salesList, '—— stream closed ——');
+        renderItem(opsList, '—— stream closed ——');
+        runButton.disabled = false;
+      });
+    </script>
+  </body>
+</html>

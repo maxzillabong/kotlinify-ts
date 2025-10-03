@@ -431,7 +431,7 @@ describe('Duration', () => {
     })
 
     it('returns result from action', () => {
-      const result = Duration.hours(25).toComponents((days, hours, minutes, seconds, nanos) => {
+      const result = Duration.hours(25).toComponents((days, hours, _minutes, _seconds, _nanos) => {
         return `${days}d ${hours}h`
       })
       expect(result).toBe('1d 1h')

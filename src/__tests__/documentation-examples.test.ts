@@ -33,7 +33,7 @@ describe('Documentation Examples - Client Side', () => {
           mockCache.set('456', profile)
         })
         .fold(
-          err => expect.fail('Should not error'),
+          _err => expect.fail('Should not error'),
           profile => {
             expect(profile.name).toBe('Bob')
             expect(mockCache.set).toHaveBeenCalledWith('456', profile)
@@ -53,7 +53,7 @@ describe('Documentation Examples - Client Side', () => {
       expect(result.getErrorOrNull()?.message).toBe('Network error')
 
       result.fold(
-        err => expect(err.message).toBe('Network error'),
+        error => expect(error.message).toBe('Network error'),
         () => expect.fail('Should not succeed')
       )
     })
@@ -64,7 +64,7 @@ describe('Documentation Examples - Client Side', () => {
       const store = new MutableStateFlow({ users: [], loading: false })
       const collected: any[] = []
 
-      const unsubscribe = store.collect(state => {
+      store.collect(state => {
         collected.push(state)
       })
 

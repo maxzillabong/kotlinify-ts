@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sequences — Kotlinify</title>
+    <style>
+      body {
+        font-family: 'Inter', system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: #e2e8f0;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+      }
+      main {
+        width: min(780px, 90vw);
+        background: rgba(15, 23, 42, 0.85);
+        border-radius: 20px;
+        padding: 32px;
+        box-shadow: 0 30px 90px rgba(15, 23, 42, 0.45);
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 2.2rem;
+      }
+      p {
+        line-height: 1.6;
+        opacity: 0.9;
+      }
+      pre {
+        background: rgba(30, 41, 59, 0.8);
+        border-radius: 14px;
+        padding: 18px;
+        overflow: auto;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-weight: 600;
+        cursor: pointer;
+        background: linear-gradient(135deg, #38bdf8, #6366f1);
+        color: #0f172a;
+        margin-top: 18px;
+        transition: transform 0.2s ease;
+      }
+      button:hover {
+        transform: translateY(-2px);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Lazy Sequences, Instant Insights</h1>
+      <p>
+        Hungry for the top performers in your product catalog? Kotlinify sequences let you stream large
+        datasets, compose rich analytics, and stop the moment you have what you need.
+      </p>
+      <pre id="output">Click "Analyze Top Sellers" to compute.</pre>
+      <button id="run">Analyze Top Sellers</button>
+    </main>
+    <script src="https://unpkg.com/kotlinify-ts@latest/dist/index.global.js"></script>
+    <script>
+      const { asSequence } = kotlinify;
+      const sales = Array.from({ length: 2000 }, (_, i) => ({
+        sku: `P-${(i + 1).toString().padStart(4, '0')}`,
+        revenue: Math.round(Math.random() * 1200),
+        returns: Math.random() < 0.08,
+        rating: 3 + Math.random() * 2,
+      }));
+
+      function analyze() {
+        const highlight = asSequence(sales)
+          .filter((item) => !item.returns)
+          .filter((item) => item.rating >= 4.2)
+          .sortedBy((item) => -item.revenue)
+          .take(5)
+          .toArray()
+          .map((item, index) => ({
+            rank: index + 1,
+            sku: item.sku,
+            revenue: `$${item.revenue.toLocaleString()}`,
+            rating: item.rating.toFixed(2),
+          }));
+
+        document.getElementById('output').textContent = JSON.stringify(highlight, null, 2);
+      }
+
+      document.getElementById('run').addEventListener('click', analyze);
+    </script>
+  </body>
+</html>

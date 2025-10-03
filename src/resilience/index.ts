@@ -169,7 +169,7 @@ export class Schedule<Input, Output> {
 
   map<B>(fn: (output: Output) => B): Schedule<Input, B> {
     let origState = this.initial
-    return new Schedule(fn(this.initial), (input, prevMapped) => {
+    return new Schedule(fn(this.initial), (input, _prevMapped) => {
       const decision = this.update(input, origState)
       origState = decision.state
       return {
@@ -194,7 +194,7 @@ export class Schedule<Input, Output> {
 
   async retry<A>(action: () => A | Promise<A>): Promise<A> {
     let state = this.initial
-    let attempts = 0
+    let _attempts = 0
 
     while (true) {
       try {
@@ -207,7 +207,7 @@ export class Schedule<Input, Output> {
         }
 
         state = decision.state
-        attempts++
+        _attempts++
 
         if (decision.delay > 0) {
           await new Promise((resolve) => setTimeout(resolve, decision.delay))

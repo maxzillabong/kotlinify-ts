@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Ranges — Kotlinify</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+        font-family: 'Inter', system-ui, sans-serif;
+        background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.28), transparent 55%),
+          radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.25), transparent 55%),
+          #f1f5f9;
+        color: #0f172a;
+      }
+      main {
+        width: min(720px, 92vw);
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 24px;
+        padding: 32px;
+        box-shadow: 0 30px 90px rgba(56, 189, 248, 0.3);
+      }
+      h1 {
+        margin: 0 0 14px;
+        font-size: 2.1rem;
+      }
+      p {
+        margin: 0 0 18px;
+        opacity: 0.7;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 18px;
+        display: grid;
+        gap: 10px;
+      }
+      li {
+        background: rgba(226, 232, 240, 0.65);
+        border-radius: 14px;
+        padding: 12px 16px;
+        font-weight: 600;
+      }
+      pre {
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 16px;
+        padding: 18px;
+        margin: 0;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-weight: 600;
+        cursor: pointer;
+        color: #0f172a;
+        background: linear-gradient(135deg, #22c55e, #38bdf8);
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Range-Driven Standup Scheduler</h1>
+      <p>Generate time slots, detect conflicts, and reverse the order with Kotlin-style ranges.</p>
+      <ul id="slots"></ul>
+      <pre id="output">Click "Build Agenda" to create slots.</pre>
+      <button id="run">Build Agenda</button>
+    </main>
+    <script src="https://unpkg.com/kotlinify-ts@latest/dist/index.global.js"></script>
+    <script>
+      const { IntRange, rangeTo, until, downTo, step } = kotlinify;
+      const slotsList = document.getElementById('slots');
+      const output = document.getElementById('output');
+
+      const formatTime = (hour) => `${hour.toString().padStart(2, '0')}:00`;
+
+      document.getElementById('run').addEventListener('click', () => {
+        slotsList.innerHTML = '';
+
+        const coreHours = rangeTo(9, 17);
+        const interviewTrack = step(until(10, 16), 2); // 10,12,14 slots
+        const reverseOps = downTo(17, 13); // 17..13 descending
+
+        coreHours
+          .toArray()
+          .map((hour) => `${formatTime(hour)} — daily sync`)
+          .forEach((slot) => {
+            const li = document.createElement('li');
+            li.textContent = slot;
+            slotsList.appendChild(li);
+          });
+
+        const conflicts = interviewTrack.toArray().filter((hour) => !coreHours.contains(hour));
+        const agendaSummary = {
+          totalCoreMeetings: coreHours.count(),
+          interviewSlots: interviewTrack.toArray().map((hour) => formatTime(hour)),
+          reverseOps: reverseOps.toArray().map((hour) => formatTime(hour)),
+          conflicts,
+        };
+
+        output.textContent = JSON.stringify(agendaSummary, null, 2);
+      });
+    </script>
+  </body>
+</html>

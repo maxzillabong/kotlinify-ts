@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Utilities — Kotlinify</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+        background: linear-gradient(135deg, #111827, #0f172a 55%, #312e81);
+        font-family: 'Inter', system-ui, sans-serif;
+        color: #f8fafc;
+      }
+      main {
+        width: min(720px, 92vw);
+        background: rgba(15, 23, 42, 0.92);
+        border-radius: 24px;
+        padding: 32px;
+        box-shadow: 0 32px 90px rgba(91, 33, 182, 0.35);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 2.1rem;
+      }
+      p {
+        margin: 0 0 18px;
+        opacity: 0.85;
+      }
+      pre {
+        background: rgba(30, 41, 59, 0.85);
+        border-radius: 18px;
+        padding: 18px;
+        margin: 0;
+        white-space: pre-wrap;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-weight: 600;
+        cursor: pointer;
+        background: linear-gradient(135deg, #a855f7, #6366f1);
+        color: #fff7ed;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Utility Power Moves</h1>
+      <p>Measure, repeat, and guard your code paths with Kotlin-inspired ergonomics.</p>
+      <pre id="output">Press "Run Diagnostics" to execute helpers.</pre>
+      <button id="run">Run Diagnostics</button>
+    </main>
+    <script src="https://unpkg.com/kotlinify-ts@latest/dist/index.global.js"></script>
+    <script>
+      const { repeatAsync, runCatchingAsync, lazy, measure, require, identity } = kotlinify;
+      const output = document.getElementById('output');
+
+      document.getElementById('run').addEventListener('click', async () => {
+        const diagnostics = [];
+
+        const expensive = lazy(() => {
+          diagnostics.push('Resolving API token lazily…');
+          return 'token-xyz';
+        });
+
+        await repeatAsync(3, async (i) => {
+          diagnostics.push(`Polling service heartbeat #${i + 1}`);
+          await new Promise((resolve) => setTimeout(resolve, 120));
+        });
+
+        const measured = await measure(async () => {
+          diagnostics.push('Simulating workload…');
+          await new Promise((resolve) => setTimeout(resolve, 180));
+          return { processed: 42 };
+        });
+
+        const guarded = await runCatchingAsync(async () => {
+          const token = expensive();
+          require(token.startsWith('token'), 'Invalid credential');
+          return identity({ token, ...measured.value });
+        });
+
+        diagnostics.push(
+          guarded.success
+            ? `✅ Diagnostics successful in ${measured.duration}ms → ${JSON.stringify(guarded.value)}`
+            : `❌ Failure: ${guarded.error?.message}`
+        );
+
+        output.textContent = diagnostics.join('\n');
+      });
+    </script>
+  </body>
+</html>

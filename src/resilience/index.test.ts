@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import {
   Schedule,
   retry,
@@ -453,12 +453,13 @@ describe('Schedule', () => {
         (result) => result === false
       )
 
-      const result = await schedule.repeat(async () => {
+      const count = await schedule.repeat(async () => {
         checks++
         return checks >= 3
       })
 
       expect(checks).toBe(3)
+      expect(count).toBe(3)
     })
 
     it('should collect all retry errors', async () => {

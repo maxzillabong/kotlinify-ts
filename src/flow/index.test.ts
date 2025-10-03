@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { Flow, StateFlow, SharedFlow, flowOf, flow } from './index'
+import { StateFlow, SharedFlow, flowOf, flow } from './index'
 import { delay } from '../coroutines'
 
 describe('Flow', () => {

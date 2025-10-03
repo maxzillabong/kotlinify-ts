@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Collections — Kotlinify</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+        font-family: 'Inter', system-ui, sans-serif;
+        background: linear-gradient(135deg, #0f172a, #1f2937);
+        color: #f8fafc;
+      }
+      main {
+        width: min(780px, 94vw);
+        background: rgba(15, 23, 42, 0.92);
+        border-radius: 26px;
+        padding: 34px;
+        box-shadow: 0 32px 100px rgba(14, 116, 144, 0.45);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 2.2rem;
+      }
+      p {
+        margin: 0 0 20px;
+        opacity: 0.85;
+      }
+      pre {
+        background: rgba(30, 41, 59, 0.82);
+        border-radius: 18px;
+        padding: 18px;
+        margin: 0;
+        max-height: 280px;
+        overflow: auto;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-weight: 600;
+        cursor: pointer;
+        background: linear-gradient(135deg, #34d399, #22d3ee);
+        color: #022c22;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Collections: Analyze Revenue in Seconds</h1>
+      <p>
+        Kotlinify collection helpers let you group, aggregate, window, and highlight trends without the
+        usual imperative boilerplate.
+      </p>
+      <pre id="output">Click "Crunch Numbers" to process.</pre>
+      <button id="run">Crunch Numbers</button>
+    </main>
+    <script src="https://unpkg.com/kotlinify-ts@latest/dist/index.global.js"></script>
+    <script>
+      const { groupBy, sumOf, average, chunked, windowed, maxBy, take } = kotlinify;
+      const output = document.getElementById('output');
+
+      const ledger = [
+        { team: 'Core', month: 'Jan', revenue: 120000 },
+        { team: 'Growth', month: 'Jan', revenue: 84500 },
+        { team: 'Core', month: 'Feb', revenue: 134000 },
+        { team: 'Growth', month: 'Feb', revenue: 91000 },
+        { team: 'Core', month: 'Mar', revenue: 152500 },
+        { team: 'Growth', month: 'Mar', revenue: 104000 },
+        { team: 'R&D', month: 'Jan', revenue: 42000 },
+        { team: 'R&D', month: 'Feb', revenue: 51000 },
+        { team: 'R&D', month: 'Mar', revenue: 62000 },
+      ];
+
+      document.getElementById('run').addEventListener('click', () => {
+        const revenueByTeam = groupBy(ledger, (entry) => entry.team);
+        const totals = Object.fromEntries(
+          Object.entries(revenueByTeam).map(([team, entries]) => [
+            team,
+            {
+              total: sumOf(entries, (e) => e.revenue),
+              avg: average(entries.map((e) => e.revenue)),
+            },
+          ])
+        );
+
+        const rolling = windowed(
+          ledger
+            .sort((a, b) => a.month.localeCompare(b.month))
+            .map((entry) => entry.revenue),
+          3,
+          1
+        ).map((window) => Math.round(average(window)));
+
+        const topTeam = maxBy(Object.entries(totals), ([, stats]) => stats.total);
+
+        const forecast = chunked(ledger, 3)
+          .map((quarter) => ({
+            teams: quarter.map((e) => e.team),
+            outlook: sumOf(quarter, (e) => e.revenue) * 1.12,
+          }));
+
+        output.textContent = JSON.stringify(
+          {
+            totals,
+            rollingAvgRevenue: rolling,
+            leadingTeam: topTeam ? { team: topTeam[0], revenue: topTeam[1].total } : null,
+            nextQuarterForecast: take(forecast, 1),
+          },
+          null,
+          2
+        );
+      });
+    </script>
+  </body>
+</html>
