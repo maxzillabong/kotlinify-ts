@@ -250,7 +250,7 @@ Transform a complex ETL pipeline from 200 lines to 20:
 import { asSequence, flowOf, coroutineScope, launch } from 'kotlinify-ts';
 
 async function processDataPipeline(csvPath: string) {
-  return await coroutineScope(async (scope) => {
+  return await coroutineScope((scope) => {
     // Read and parse CSV lazily
     const records = asSequence(await readCSV(csvPath))
       .map(line => parseCSVLine(line))

@@ -200,7 +200,6 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
       </footer>
-      </div>
     </div>
   );
 }
