@@ -53,7 +53,9 @@ describe('Utils', () => {
 
     it('should pass index to action', async () => {
       const indices: number[] = []
-      await repeatAsync(3, async (i) => indices.push(i))
+      await repeatAsync(3, async (i) => {
+        indices.push(i)
+      })
       expect(indices).toEqual([0, 1, 2])
     })
 

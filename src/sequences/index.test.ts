@@ -263,7 +263,7 @@ describe('Sequence', () => {
     })
 
     it('throws on empty sequence', () => {
-      expect(() => sequenceOf().first()).toThrow()
+      expect(() => sequenceOf<number>().first()).toThrow()
     })
   })
 
@@ -273,7 +273,7 @@ describe('Sequence', () => {
     })
 
     it('returns null on empty sequence', () => {
-      expect(sequenceOf().firstOrNull()).toBe(null)
+      expect(sequenceOf<number>().firstOrNull()).toBe(null)
     })
   })
 
@@ -283,7 +283,7 @@ describe('Sequence', () => {
     })
 
     it('throws on empty sequence', () => {
-      expect(() => sequenceOf().last()).toThrow()
+      expect(() => sequenceOf<number>().last()).toThrow()
     })
   })
 
@@ -293,7 +293,7 @@ describe('Sequence', () => {
     })
 
     it('returns null on empty sequence', () => {
-      expect(sequenceOf().lastOrNull()).toBe(null)
+      expect(sequenceOf<number>().lastOrNull()).toBe(null)
     })
   })
 
@@ -321,7 +321,7 @@ describe('Sequence', () => {
     })
 
     it('returns false for empty without predicate', () => {
-      expect(sequenceOf().any()).toBe(false)
+      expect(sequenceOf<number>().any()).toBe(false)
     })
   })
 
@@ -388,7 +388,7 @@ describe('Sequence', () => {
     })
 
     it('throws on empty sequence', () => {
-      expect(() => sequenceOf().average()).toThrow()
+      expect(() => sequenceOf<number>().average()).toThrow()
     })
   })
 
@@ -406,7 +406,7 @@ describe('Sequence', () => {
     })
 
     it('throws on empty sequence', () => {
-      expect(() => sequenceOf().maxBy((x) => x)).toThrow()
+      expect(() => sequenceOf<number>().maxBy((x) => x)).toThrow()
     })
   })
 
@@ -417,7 +417,7 @@ describe('Sequence', () => {
     })
 
     it('throws on empty sequence', () => {
-      expect(() => sequenceOf().minBy((x) => x)).toThrow()
+      expect(() => sequenceOf<number>().minBy((x) => x)).toThrow()
     })
   })
 

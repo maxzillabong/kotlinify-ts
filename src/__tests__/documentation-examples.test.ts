@@ -61,7 +61,10 @@ describe('Documentation Examples - Client Side', () => {
 
   describe('State Management Example', () => {
     it('MutableStateFlow collects state changes', async () => {
-      const store = new MutableStateFlow({ users: [], loading: false })
+      const store = new MutableStateFlow<{ users: Array<{ id: number; name: string }>; loading: boolean }>({
+        users: [],
+        loading: false,
+      })
       const collected: any[] = []
 
       store.collect(state => {

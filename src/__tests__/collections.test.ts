@@ -110,7 +110,7 @@ describe('Collection Functions', () => {
     })
 
     it('reduce throws on empty array', () => {
-      expect(() => reduce([], (acc, x) => acc + x)).toThrow('Array is empty')
+      expect(() => reduce([] as number[], (acc, x) => acc + x)).toThrow('Array is empty')
     })
 
     it('foldRight processes from right to left', () => {
@@ -118,7 +118,7 @@ describe('Collection Functions', () => {
     })
 
     it('reduceRight processes from right to left', () => {
-      expect(reduceRight([1, 2, 3], (val, acc) => `${acc}${val}`)).toBe('321')
+      expect(reduceRight(['1', '2', '3'], (val, acc) => `${acc}${val}`)).toBe('321')
     })
   })
 
@@ -132,7 +132,7 @@ describe('Collection Functions', () => {
     })
 
     it('runningReduce handles empty array', () => {
-      expect(runningReduce([], (acc, x) => acc + x)).toEqual([])
+      expect(runningReduce([] as number[], (acc, x) => acc + x)).toEqual([])
     })
   })
 

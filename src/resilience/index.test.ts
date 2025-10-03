@@ -11,7 +11,7 @@ describe('Schedule', () => {
   describe('recurs', () => {
     it('should repeat specified number of times', async () => {
       let count = 0
-      const schedule = Schedule.recurs(3)
+      const schedule = Schedule.recurs<number>(3)
 
       await schedule.repeat(async () => {
         count++
@@ -23,7 +23,7 @@ describe('Schedule', () => {
 
     it('should retry specified number of times before giving up', async () => {
       let attempts = 0
-      const schedule = Schedule.recurs(3)
+      const schedule = Schedule.recurs<Error>(3)
 
       await expect(async () => {
         await schedule.retry(async () => {
@@ -37,7 +37,7 @@ describe('Schedule', () => {
 
     it('should succeed if action succeeds before max retries', async () => {
       let attempts = 0
-      const schedule = Schedule.recurs(5)
+      const schedule = Schedule.recurs<Error>(5)
 
       const result = await schedule.retry(async () => {
         attempts++
@@ -150,7 +150,7 @@ describe('Schedule', () => {
   describe('collect', () => {
     it('should collect all inputs', async () => {
       let count = 0
-      const schedule = Schedule.collect<number>().zipLeft(Schedule.recurs(3))
+      const schedule = Schedule.collect<number>().zipLeft(Schedule.recurs<number>(3))
 
       const result = await schedule.repeat(async () => {
         count++
@@ -235,7 +235,7 @@ describe('Schedule', () => {
     it('should switch to next schedule after first completes', async () => {
       let attempts = 0
 
-      const schedule = Schedule.recurs<Error>(2).andThen(Schedule.recurs(3))
+      const schedule = Schedule.recurs<Error>(2).andThen(Schedule.recurs<Error>(3))
 
       await expect(async () => {
         await schedule.retry(async () => {
@@ -253,7 +253,7 @@ describe('Schedule', () => {
       let counter = 0
 
       const result = await Schedule.identity<string>()
-        .zipLeft(Schedule.recurs(3))
+        .zipLeft(Schedule.recurs<string>(3))
         .repeat(async () => {
           counter++
           return `${counter}`
@@ -280,7 +280,7 @@ describe('Schedule', () => {
 
   describe('map', () => {
     it('should transform the output', async () => {
-      const schedule = Schedule.recurs(3).map((n) => `Count: ${n}`)
+      const schedule = Schedule.recurs<number>(3).map((n) => `Count: ${n}`)
 
       let counter = 0
       const result = await schedule.repeat(async () => {
@@ -308,7 +308,7 @@ describe('Schedule', () => {
     it('should retry with given schedule', async () => {
       let attempts = 0
 
-      const result = await retry(Schedule.recurs(5), async () => {
+      const result = await retry(Schedule.recurs<Error>(5), async () => {
         attempts++
         if (attempts < 3) throw new Error('Not yet')
         return 'success'
@@ -323,7 +323,7 @@ describe('Schedule', () => {
     it('should repeat with given schedule', async () => {
       let count = 0
 
-      const result = await repeat(Schedule.recurs(4), async () => {
+      const result = await repeat(Schedule.recurs<number>(4), async () => {
         count++
         return count
       })
@@ -337,7 +337,7 @@ describe('Schedule', () => {
     it('should retry synchronous operations', () => {
       let attempts = 0
 
-      const result = retrySync(Schedule.recurs(5), () => {
+      const result = retrySync(Schedule.recurs<Error>(5), () => {
         attempts++
         if (attempts < 3) throw new Error('Not yet')
         return 'success'
@@ -351,7 +351,7 @@ describe('Schedule', () => {
       let attempts = 0
 
       expect(() => {
-        retrySync(Schedule.recurs(2), () => {
+        retrySync(Schedule.recurs<Error>(2), () => {
           attempts++
           throw new Error('Always fails')
         })
@@ -365,7 +365,7 @@ describe('Schedule', () => {
     it('should repeat synchronous operations', () => {
       let count = 0
 
-      const result = repeatSync(Schedule.recurs(3), () => {
+      const result = repeatSync(Schedule.recurs<number>(3), () => {
         count++
         return count
       })
@@ -379,7 +379,7 @@ describe('Schedule', () => {
     it('should handle errors with orElse callback', async () => {
       let count = 0
 
-      const result = await Schedule.recurs(3).repeatOrElse(
+      const result = await Schedule.recurs<number>(3).repeatOrElse(
         async () => {
           count++
           if (count === 2) throw new Error('Failed at 2')
@@ -395,7 +395,7 @@ describe('Schedule', () => {
   describe('complex policies', () => {
     it('should support exponential backoff with max retries', async () => {
       const schedule = Schedule.exponential<Error>(100)
-        .and(Schedule.recurs(3))
+        .and(Schedule.recurs<Error>(3))
         .map(([delay, count]) => ({ delay, count }))
 
       let attempts = 0
@@ -434,7 +434,7 @@ describe('Schedule', () => {
       const maxAttempts = 3
 
       const schedule = Schedule.exponential<Error>(100, 2).and(
-        Schedule.recurs(maxAttempts - 1)
+        Schedule.recurs<Error>(maxAttempts - 1)
       )
 
       await expect(async () => {
@@ -466,7 +466,7 @@ describe('Schedule', () => {
       let attempts = 0
 
       const schedule = Schedule.collect<Error>()
-        .zipLeft(Schedule.recurs(3))
+        .zipLeft(Schedule.recurs<Error>(3))
 
       await expect(async () => {
         await schedule.retry(async () => {

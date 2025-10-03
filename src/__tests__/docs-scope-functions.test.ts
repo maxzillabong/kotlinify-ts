@@ -47,12 +47,12 @@ describe('Documentation Examples - Scope Functions', () => {
     it('prototype chaining', () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-      const user = asScope({ name: 'John' })
-        .apply(u => {
+      const user = asScope<{ name: string; age?: number; email?: string }>({ name: 'John' })
+        .apply((u) => {
           u.age = 30
           u.email = 'john@example.com'
         })
-        .also(u => console.log('Created:', u.name))
+        .also((u) => console.log('Created:', u.name))
         .value()
 
       expect(user).toEqual({

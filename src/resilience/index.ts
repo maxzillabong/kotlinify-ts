@@ -65,10 +65,10 @@ export class Schedule<Input, Output> {
   }
 
   static collect<A>(): Schedule<A, A[]> {
-    return new Schedule([], (input, collected) => ({
+    return new Schedule<A, A[]>([] as A[], (input, collected) => ({
       cont: true,
       delay: 0,
-      state: [...collected, input],
+      state: [...collected, input] as A[],
     }))
   }
 
@@ -131,32 +131,33 @@ export class Schedule<Input, Output> {
   }
 
   andThen<B>(next: Schedule<Input, B>): Schedule<Input, Output | B> {
-    return new Schedule(
-      { tag: 'first' as const, state: this.initial },
-      (input, current) => {
-        if (current.tag === 'first') {
-          const decision = this.update(input, current.state)
-          if (decision.cont) {
-            return {
-              cont: true,
-              delay: decision.delay,
-              state: { tag: 'first' as const, state: decision.state },
-            }
-          }
+    type PhaseState = { tag: 'first'; state: Output } | { tag: 'second'; state: B }
+    const initialState: PhaseState = { tag: 'first', state: this.initial }
+
+    return new Schedule<Input, PhaseState>(initialState, (input, current: PhaseState) => {
+      if (current.tag === 'first') {
+        const decision = this.update(input, current.state)
+        if (decision.cont) {
           return {
             cont: true,
             delay: decision.delay,
-            state: { tag: 'second' as const, state: next.initial },
+            state: { tag: 'first', state: decision.state } as PhaseState,
           }
         }
-        const decision = next.update(input, current.state)
         return {
-          cont: decision.cont,
+          cont: true,
           delay: decision.delay,
-          state: { tag: 'second' as const, state: decision.state },
+          state: { tag: 'second', state: next.initial } as PhaseState,
         }
       }
-    ) as unknown as Schedule<Input, Output | B>
+
+      const decision = next.update(input, current.state)
+      return {
+        cont: decision.cont,
+        delay: decision.delay,
+        state: { tag: 'second', state: decision.state } as PhaseState,
+      }
+    }) as unknown as Schedule<Input, Output | B>
   }
 
   zipLeft<B>(other: Schedule<Input, B>): Schedule<Input, Output> {
@@ -216,12 +217,12 @@ export class Schedule<Input, Output> {
     }
   }
 
-  async repeat<A>(action: () => A | Promise<A>): Promise<Output> {
+  async repeat(action: () => Input | Promise<Input>): Promise<Output> {
     let state = this.initial
-    let result: A = await Promise.resolve(action())
+    let result: Input = await Promise.resolve(action())
 
     while (true) {
-      const decision = this.update(result as Input, state)
+      const decision = this.update(result, state)
 
       if (!decision.cont) {
         return decision.state
@@ -237,17 +238,17 @@ export class Schedule<Input, Output> {
     }
   }
 
-  async repeatOrElse<A, B>(
-    action: () => A | Promise<A>,
+  async repeatOrElse<B>(
+    action: () => Input | Promise<Input>,
     orElse: (error: unknown, state: Output) => B
   ): Promise<Output | B> {
     let state = this.initial
 
     try {
-      let result: A = await Promise.resolve(action())
+      let result: Input = await Promise.resolve(action())
 
       while (true) {
-        const decision = this.update(result as Input, state)
+        const decision = this.update(result, state)
 
         if (!decision.cont) {
           return decision.state
@@ -267,8 +268,8 @@ export class Schedule<Input, Output> {
   }
 }
 
-export async function retry<A>(
-  schedule: Schedule<unknown, unknown>,
+export async function retry<A, Input, State>(
+  schedule: Schedule<Input, State>,
   action: () => A | Promise<A>
 ): Promise<A> {
   return schedule.retry(action)
@@ -300,8 +301,8 @@ export function repeatSync<A, Output>(
   }
 }
 
-export function retrySync<A>(
-  schedule: Schedule<unknown, unknown>,
+export function retrySync<A, Input, State>(
+  schedule: Schedule<Input, State>,
   action: () => A
 ): A {
   let state = schedule['initial']
@@ -310,7 +311,7 @@ export function retrySync<A>(
     try {
       return action()
     } catch (error) {
-      const decision = schedule['update'](error, state)
+      const decision = schedule['update'](error as Input, state)
 
       if (!decision.cont) {
         throw error

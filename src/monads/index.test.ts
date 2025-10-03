@@ -29,7 +29,7 @@ describe('Option', () => {
     })
 
     it('flatMap with None returns None', () => {
-      const result = Some(5).flatMap(() => None())
+      const result = Some(5).flatMap(() => None<number>())
       expect(result.isNone).toBe(true)
     })
 
@@ -73,13 +73,13 @@ describe('Option', () => {
 
   describe('None', () => {
     it('represents absence', () => {
-      const none = None()
+      const none = None<unknown>()
       expect(none.isSome).toBe(false)
       expect(none.isNone).toBe(true)
     })
 
     it('get throws', () => {
-      expect(() => None().get()).toThrow()
+      expect(() => None<unknown>().get()).toThrow()
     })
 
     it('map returns None', () => {
@@ -102,16 +102,16 @@ describe('Option', () => {
     })
 
     it('getOrNull returns null', () => {
-      expect(None().getOrNull()).toBe(null)
+      expect(None<unknown>().getOrNull()).toBe(null)
     })
 
     it('getOrThrow throws', () => {
-      expect(() => None().getOrThrow()).toThrow()
+      expect(() => None<unknown>().getOrThrow()).toThrow()
     })
 
     it('orElse returns alternative', () => {
       const alternative = Some(42)
-      const result = None().orElse(() => alternative)
+      const result = None<number>().orElse(() => alternative)
       expect(result).toBe(alternative)
     })
 
@@ -424,13 +424,11 @@ describe('Result', () => {
     })
 
     it.skip('takeIf keeps matching Success', () => {
-      const result = Success<number, string>(5).takeIf((x) => x > 3)
-      expect(result.isSuccess).toBe(true)
+      // not yet implemented
     })
 
     it.skip('takeIf rejects non-matching Success', () => {
-      const result = Success<number, string>(5).takeIf((x) => x > 10)
-      expect(result.isFailure).toBe(true)
+      // not yet implemented
     })
   })
 })

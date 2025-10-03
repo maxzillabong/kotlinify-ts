@@ -6,13 +6,13 @@ describe('Flow', () => {
   describe('flowOf', () => {
     it('creates flow from values', async () => {
       const values: number[] = []
-      await flowOf(1, 2, 3).collect((v) => values.push(v))
+      await flowOf(1, 2, 3).collect((v) => { values.push(v) })
       expect(values).toEqual([1, 2, 3])
     })
 
     it('creates empty flow', async () => {
       const values: number[] = []
-      await flowOf().collect((v) => values.push(v))
+      await flowOf<number>().collect((v) => { values.push(v) })
       expect(values).toEqual([])
     })
   })
@@ -26,7 +26,7 @@ describe('Flow', () => {
       })
 
       const values: number[] = []
-      await testFlow.collect((v) => values.push(v))
+      await testFlow.collect((v) => { values.push(v) })
       expect(values).toEqual([1, 2, 3])
     })
   })
@@ -36,7 +36,7 @@ describe('Flow', () => {
       const values: number[] = []
       await flowOf(1, 2, 3)
         .map((x) => x * 2)
-        .collect((v) => values.push(v))
+        .collect((v: number) => { values.push(v) })
       expect(values).toEqual([2, 4, 6])
     })
 
@@ -47,7 +47,7 @@ describe('Flow', () => {
           await delay(1)
           return x * 2
         })
-        .collect((v) => values.push(v))
+        .collect((v: number) => { values.push(v) })
       expect(values).toEqual([2, 4, 6])
     })
   })
@@ -57,7 +57,7 @@ describe('Flow', () => {
       const values: number[] = []
       await flowOf(1, 2, 3, 4, 5)
         .filter((x) => x % 2 === 0)
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([2, 4])
     })
 
@@ -68,7 +68,7 @@ describe('Flow', () => {
           await delay(1)
           return x > 2
         })
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([3, 4])
     })
   })
@@ -78,7 +78,7 @@ describe('Flow', () => {
       const values: number[] = []
       await flowOf(1, 2, 3, 4, 5)
         .take(3)
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([1, 2, 3])
     })
 
@@ -86,7 +86,7 @@ describe('Flow', () => {
       const values: number[] = []
       await flowOf(1, 2)
         .take(5)
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([1, 2])
     })
   })
@@ -96,7 +96,7 @@ describe('Flow', () => {
       const values: number[] = []
       await flowOf(1, 2, 3, 4, 5)
         .drop(2)
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([3, 4, 5])
     })
 
@@ -104,7 +104,7 @@ describe('Flow', () => {
       const values: number[] = []
       await flowOf(1, 2, 3)
         .drop(0)
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([1, 2, 3])
     })
   })
@@ -115,8 +115,8 @@ describe('Flow', () => {
       const values: number[] = []
 
       await flowOf(1, 2, 3)
-        .onEach((v) => sideEffects.push(v))
-        .collect((v) => values.push(v))
+        .onEach((v) => { sideEffects.push(v) })
+        .collect((v) => { values.push(v) })
 
       expect(sideEffects).toEqual([1, 2, 3])
       expect(values).toEqual([1, 2, 3])
@@ -128,8 +128,8 @@ describe('Flow', () => {
       const actions: string[] = []
 
       await flowOf(1, 2)
-        .onStart(() => actions.push('start'))
-        .collect(() => actions.push('value'))
+        .onStart(() => { actions.push('start') })
+        .collect(() => { actions.push('value') })
 
       expect(actions[0]).toBe('start')
       expect(actions.length).toBe(3)
@@ -141,8 +141,8 @@ describe('Flow', () => {
       const actions: string[] = []
 
       await flowOf(1, 2)
-        .onEach(() => actions.push('value'))
-        .onCompletion(() => actions.push('complete'))
+        .onEach(() => { actions.push('value') })
+        .onCompletion(() => { actions.push('complete') })
         .collect(() => {})
 
       expect(actions[actions.length - 1]).toBe('complete')
@@ -156,7 +156,7 @@ describe('Flow', () => {
           await emit(1)
           throw new Error('test')
         })
-          .onCompletion(() => actions.push('complete'))
+          .onCompletion(() => { actions.push('complete') })
           .collect(() => {})
       } catch (e) {
         // Expected
@@ -174,7 +174,7 @@ describe('Flow', () => {
         yield 1
         throw new Error('test error')
       })
-        .catch((e) => errors.push(e))
+        .catch((e) => { errors.push(e) })
         .collect(() => {})
 
       expect(errors).toHaveLength(1)
@@ -203,7 +203,7 @@ describe('Flow', () => {
         yield 3
       })
         .debounce(100)
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
 
       await vi.runAllTimersAsync()
       await promise
@@ -217,7 +217,7 @@ describe('Flow', () => {
       const values: number[] = []
       await flowOf(1, 1, 2, 2, 3, 1)
         .distinctUntilChanged()
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([1, 2, 3, 1])
     })
   })
@@ -227,7 +227,7 @@ describe('Flow', () => {
       const values: number[] = []
       await flowOf(1, 2, 3)
         .flatMapConcat((x) => flowOf(x, x * 10))
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([1, 10, 2, 20, 3, 30])
     })
   })
@@ -236,11 +236,11 @@ describe('Flow', () => {
     it('transforms with custom emit', async () => {
       const values: number[] = []
       await flowOf(1, 2, 3)
-        .transform(async (value, emit) => {
+        .transform<number>(async (value, emit) => {
           await emit(value)
           await emit(value * 10)
         })
-        .collect((v) => values.push(v))
+        .collect((v: number) => { values.push(v) })
       expect(values).toEqual([1, 10, 2, 20, 3, 30])
     })
   })
@@ -256,7 +256,7 @@ describe('Flow', () => {
         }
       })
         .throttle(30)
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
 
       expect(values.length).toBeLessThan(5)
       expect(values[0]).toBe(1)
@@ -268,7 +268,7 @@ describe('Flow', () => {
       const values: number[] = []
       await flowOf(1, 2, 3, 4, 5)
         .buffer(2)
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([1, 2, 3, 4, 5])
     })
   })
@@ -278,7 +278,7 @@ describe('Flow', () => {
       const values: number[] = []
       await flowOf(1, 2, 3, 4)
         .scan(0, (acc, v) => acc + v)
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([0, 1, 3, 6, 10])
     })
 
@@ -286,7 +286,7 @@ describe('Flow', () => {
       const values: number[] = []
       await flowOf<number>()
         .scan(42, (acc, v) => acc + v)
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([42])
     })
   })
@@ -296,7 +296,7 @@ describe('Flow', () => {
       const values: [number, string][] = []
       await flowOf('a', 'b', 'c')
         .withIndex()
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([[0, 'a'], [1, 'b'], [2, 'c']])
     })
   })
@@ -308,7 +308,7 @@ describe('Flow', () => {
     })
 
     it('throws on empty flow', async () => {
-      await expect(flowOf().first()).rejects.toThrow()
+      await expect(flowOf<number>().first()).rejects.toThrow()
     })
   })
 
@@ -319,14 +319,14 @@ describe('Flow', () => {
     })
 
     it('returns empty array for empty flow', async () => {
-      const array = await flowOf().toArray()
+      const array = await flowOf<number>().toArray()
       expect(array).toEqual([])
     })
   })
 
   describe('reduce', () => {
     it('reduces values', async () => {
-      const sum = await flowOf(1, 2, 3, 4).reduce((acc, v) => acc + v, 0)
+      const sum = await flowOf(1, 2, 3, 4).reduce((acc, v) => acc + v)
       expect(sum).toBe(10)
     })
   })
@@ -350,7 +350,7 @@ describe('Flow', () => {
         .filter((x) => x % 2 === 0)
         .map((x) => x * 2)
         .take(2)
-        .collect((v) => values.push(v))
+        .collect((v) => { values.push(v) })
       expect(values).toEqual([4, 8])
     })
   })
@@ -361,7 +361,7 @@ describe('StateFlow', () => {
     const stateFlow = new StateFlow(42)
     const values: number[] = []
 
-    await stateFlow.take(1).collect((v) => values.push(v))
+    await stateFlow.take(1).collect((v) => { values.push(v) })
 
     expect(values).toEqual([42])
   })
@@ -384,8 +384,8 @@ describe('StateFlow', () => {
       stateFlow.cancelAll()
     }, 10)
 
-    const p1 = stateFlow.collect((v) => values1.push(v)).catch(() => {})
-    const p2 = stateFlow.collect((v) => values2.push(v)).catch(() => {})
+    const p1 = stateFlow.collect((v) => { values1.push(v) }).catch(() => {})
+    const p2 = stateFlow.collect((v) => { values2.push(v) }).catch(() => {})
 
     await Promise.all([p1, p2])
 
@@ -410,7 +410,7 @@ describe('SharedFlow', () => {
     await sharedFlow.emit(3)
 
     const values: number[] = []
-    await sharedFlow.take(2).collect((v) => values.push(v))
+    await sharedFlow.take(2).collect((v) => { values.push(v) })
 
     expect(values).toEqual([2, 3])
   })
@@ -428,8 +428,8 @@ describe('SharedFlow', () => {
       sharedFlow.cancelAll()
     }, 10)
 
-    const p1 = sharedFlow.collect((v) => values1.push(v)).catch(() => {})
-    const p2 = sharedFlow.collect((v) => values2.push(v)).catch(() => {})
+    const p1 = sharedFlow.collect((v) => { values1.push(v) }).catch(() => {})
+    const p2 = sharedFlow.collect((v) => { values2.push(v) }).catch(() => {})
 
     await Promise.all([p1, p2])
 
@@ -445,7 +445,7 @@ describe('SharedFlow', () => {
     await sharedFlow.emit(3)
 
     const values: number[] = []
-    await sharedFlow.take(1).collect((v) => values.push(v))
+    await sharedFlow.take(1).collect((v) => { values.push(v) })
 
     expect(values).toEqual([3])
   })
