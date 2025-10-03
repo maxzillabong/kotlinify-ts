@@ -121,19 +121,25 @@ Handle real-time data with backpressure and cancellation:
 import { flowOf, flow } from 'kotlinify-ts';
 
 // Process WebSocket messages with automatic backpressure
-const messageFlow = flow(async function* () {
+const messageFlow = flow(async (emit) => {
   const ws = new WebSocket(url);
-  for await (const message of ws) {
-    yield JSON.parse(message);
-  }
+
+  await new Promise<void>((resolve, reject) => {
+    ws.addEventListener('message', async (event) => {
+      await emit(JSON.parse(event.data as string));
+    });
+    ws.addEventListener('close', () => resolve());
+    ws.addEventListener('error', (error) => reject(error as Event));
+  });
 })
   .filter(msg => msg.type === 'data')
   .map(msg => msg.payload)
   .debounce(100)
   .distinctUntilChanged()
   .onEach(data => updateUI(data))
-  .catch(err => console.error('Stream error:', err))
-  .collect(data => saveToDatabase(data));
+  .catch(err => console.error('Stream error:', err));
+
+await messageFlow.collect(data => saveToDatabase(data));
 ```
 
 ### ⚡ Coroutines: Structured Concurrency
