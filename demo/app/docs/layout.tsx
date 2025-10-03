@@ -82,7 +82,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                 API
               </Link>
               <a
-                href="https://github.com/maxzillabong/kotlinify-kt"
+                href="https://github.com/maxzillabong/kotlinify-ts"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -181,7 +181,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                 Documentation
               </Link>
               <a
-                href="https://github.com/maxzillabong/kotlinify-kt"
+                href="https://github.com/maxzillabong/kotlinify-ts"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -189,7 +189,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                 GitHub
               </a>
               <a
-                href="https://github.com/maxzillabong/kotlinify-kt/issues"
+                href="https://github.com/maxzillabong/kotlinify-ts/issues"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -200,6 +200,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
       </footer>
+      </div>
     </div>
   );
 }
