@@ -46,12 +46,21 @@ export class Flow<T> {
   take(count: number): Flow<T> {
     return new Flow(async (collector) => {
       let taken = 0
-      await this.collect(async (value) => {
-        if (taken < count) {
-          await collector.emit(value)
-          taken++
+      try {
+        await this.collect(async (value) => {
+          if (taken < count) {
+            await collector.emit(value)
+            taken++
+            if (taken >= count) {
+              throw new CancellationError('FLOW_TAKE_COMPLETED')
+            }
+          }
+        })
+      } catch (error) {
+        if (!(error instanceof CancellationError)) {
+          throw error
         }
-      })
+      }
     })
   }
 
@@ -545,9 +554,22 @@ export class Flow<T> {
   }
 }
 
-export function flow<T>(block: () => AsyncGenerator<T>): Flow<T> {
+export function flow<T>(
+  block:
+    | (() => AsyncGenerator<T>)
+    | ((emit: (value: T) => Promise<void>) => void | Promise<void>)
+): Flow<T> {
   return new Flow(async (collector) => {
-    for await (const value of block()) {
+    if (block.length > 0) {
+      const emitter = block as (emit: (value: T) => Promise<void>) => void | Promise<void>
+      await emitter(async (value) => {
+        await collector.emit(value)
+      })
+      return
+    }
+
+    const generatorFactory = block as () => AsyncGenerator<T>
+    for await (const value of generatorFactory()) {
       await collector.emit(value)
     }
   })
@@ -681,10 +703,11 @@ export class SharedFlow<T> extends Flow<T> {
     if (this.replay > 0) {
       this._replayCache.push(value)
       if (this._replayCache.length > this.replay) {
-        if (this.onBufferOverflow === 'DROP_OLDEST') {
-          this._replayCache.shift()
-        } else if (this.onBufferOverflow === 'DROP_LATEST') {
+        if (this.onBufferOverflow === 'DROP_LATEST') {
           this._replayCache.pop()
+        } else {
+          // Default behaviour keeps the most recent values.
+          this._replayCache.shift()
         }
       }
     }

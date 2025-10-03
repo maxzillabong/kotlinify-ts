@@ -34,6 +34,7 @@ export class Job {
     this.children.forEach((child) => child.cancel(reason))
     this.cancelCallbacks.forEach((callback) => callback())
     this.completionReject(new CancellationError(reason))
+    this.completionPromise.catch(() => {})
   }
 
   get isActive(): boolean {
@@ -59,6 +60,7 @@ export class Job {
     this._cancelled = true
     this.children.forEach((child) => child.cancel())
     this.completionReject(error)
+    this.completionPromise.catch(() => {})
   }
 
   async join(): Promise<void> {
@@ -140,10 +142,13 @@ export class CoroutineScope {
     this.job.addChild(childJob)
     this.childJobs.push(childJob)
 
-    Promise.resolve()
-      .then(() => Promise.resolve(block.call(childJob)))
-      .then(() => childJob.complete())
-      .catch((error) => childJob.fail(error))
+    try {
+      Promise.resolve(block.call(childJob))
+        .then(() => childJob.complete())
+        .catch((error) => childJob.fail(error instanceof Error ? error : new Error(String(error))))
+    } catch (error) {
+      childJob.fail(error as Error)
+    }
 
     return childJob
   }
@@ -218,6 +223,7 @@ export async function coroutineScope<T>(
     return result
   } catch (error) {
     scope.cancel()
+    await scope.joinAll()
     throw error
   }
 }
