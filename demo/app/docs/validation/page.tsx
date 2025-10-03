@@ -26,7 +26,7 @@ export default function ValidationPage() {
 
         <DocsSection title="Form Validation" description="Validate multiple fields and collect all errors">
           <CodeBlock
-            code={`import { zipOrAccumulate3, Left, Right } from 'kotlinify-ts'
+            code={`import { zipOrAccumulate, Left, Right } from 'kotlinify-ts'
 
 type FormData = {
   username?: string
@@ -50,7 +50,7 @@ const validatePassword = (password?: string) =>
     : Left('Password must be at least 8 characters')
 
 const validateForm = (form: FormData) =>
-  zipOrAccumulate3(
+  zipOrAccumulate(
     validateUsername(form.username),
     validateEmail(form.email),
     validatePassword(form.password)
@@ -163,9 +163,9 @@ function validate(input: string): ValidationResult<number> {
           />
         </DocsSection>
 
-        <DocsSection title="zipOrAccumulate Variants" description="Combine 2, 3, or 4 validations">
+        <DocsSection title="zipOrAccumulate" description="Combine multiple validations">
           <CodeBlock
-            code={`import { zipOrAccumulate, zipOrAccumulate3, zipOrAccumulate4 } from 'kotlinify-ts'
+            code={`import { zipOrAccumulate } from 'kotlinify-ts'
 
 // Combine 2 validations
 const result2 = zipOrAccumulate(
@@ -175,15 +175,15 @@ const result2 = zipOrAccumulate(
 // Either<NonEmptyList<Error>, [Field1, Field2]>
 
 // Combine 3 validations
-const result3 = zipOrAccumulate3(
+const result3 = zipOrAccumulate(
   validateField1(data.field1),
   validateField2(data.field2),
   validateField3(data.field3)
 )
 // Either<NonEmptyList<Error>, [Field1, Field2, Field3]>
 
-// Combine 4 validations
-const result4 = zipOrAccumulate4(
+// Combine 4 or more validations
+const result4 = zipOrAccumulate(
   validateField1(data.field1),
   validateField2(data.field2),
   validateField3(data.field3),
@@ -196,7 +196,7 @@ const result4 = zipOrAccumulate4(
 
         <DocsSection title="Real-World Example" description="API request validation">
           <CodeBlock
-            code={`import { zipOrAccumulate3, mapOrAccumulate, Left, Right } from 'kotlinify-ts'
+            code={`import { zipOrAccumulate, mapOrAccumulate, Left, Right } from 'kotlinify-ts'
 
 type ApiRequest = {
   endpoint: string
@@ -220,7 +220,7 @@ const validateBody = (body?: unknown) =>
     : Left('Body is required')
 
 const validateRequest = (request: Partial<ApiRequest>) =>
-  zipOrAccumulate3(
+  zipOrAccumulate(
     validateEndpoint(request.endpoint),
     validateMethod(request.method),
     validateBody(request.body)
@@ -270,7 +270,7 @@ const result = validateUsername(form.username)
               <h4 className="text-white font-semibold mb-3">Validation (Accumulation)</h4>
               <CodeBlock
                 code={`// Collects all errors
-const result = zipOrAccumulate3(
+const result = zipOrAccumulate(
   validateUsername(form.username),
   validateEmail(form.email),
   validatePassword(form.password)

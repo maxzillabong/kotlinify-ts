@@ -70,8 +70,9 @@ async function loadDashboard() {
 
 async function loadDashboard() {
   // Everything in this scope is automatically managed
+  // Notice: No 'async' keywords needed! The library handles async implicitly
   return withTimeout(5000, () =>
-    coroutineScope(async (scope) => {
+    coroutineScope((scope) => {
       // Launch parallel operations - all automatically cancellable
       const userJob = scope.async(() => fetch('/api/user').then(r => r.json()));
       const analyticsJob = scope.async(() => fetch('/api/analytics').then(r => r.json()));

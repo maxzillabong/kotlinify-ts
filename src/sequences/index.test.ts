@@ -23,8 +23,8 @@ describe('Sequence', () => {
       expect(seq.toArray()).toEqual([1, 2, 3])
     })
 
-    it('creates from array prototype', () => {
-      const seq = [1, 2, 3].asSequence()
+    it('creates from array using asSequence', () => {
+      const seq = asSequence([1, 2, 3])
       expect(seq.toArray()).toEqual([1, 2, 3])
     })
 

@@ -148,13 +148,13 @@ export class CoroutineScope {
     return childJob
   }
 
-  async<T>(block: () => Promise<T>): Deferred<T> {
+  async<T>(block: () => T | Promise<T>): Deferred<T> {
     const deferred = new Deferred<T>()
     this.job.addChild(deferred)
     this.childJobs.push(deferred)
 
     Promise.resolve()
-      .then(() => block())
+      .then(() => Promise.resolve(block()))
       .then((value) => deferred.completeWith(value))
       .catch((error) => deferred.completeExceptionally(error))
 
@@ -177,11 +177,11 @@ export function launch(block: (this: Job) => void | Promise<void>): Job {
   return job
 }
 
-export function asyncValue<T>(block: () => Promise<T>): Deferred<T> {
+export function asyncValue<T>(block: () => T | Promise<T>): Deferred<T> {
   const deferred = new Deferred<T>()
 
   Promise.resolve()
-    .then(() => block())
+    .then(() => Promise.resolve(block()))
     .then((value) => deferred.completeWith(value))
     .catch((error) => deferred.completeExceptionally(error))
 
@@ -209,11 +209,11 @@ export function delay(ms: number): Promise<void> {
 }
 
 export async function coroutineScope<T>(
-  block: (scope: CoroutineScope) => Promise<T>
+  block: (scope: CoroutineScope) => T | Promise<T>
 ): Promise<T> {
   const scope = new CoroutineScope()
   try {
-    const result = await block(scope)
+    const result = await Promise.resolve(block(scope))
     await scope.joinAll()
     return result
   } catch (error) {
@@ -223,22 +223,22 @@ export async function coroutineScope<T>(
 }
 
 export async function supervisorScope<T>(
-  block: (scope: CoroutineScope) => Promise<T>
+  block: (scope: CoroutineScope) => T | Promise<T>
 ): Promise<T> {
   const scope = new CoroutineScope()
-  return block(scope)
+  return Promise.resolve(block(scope))
 }
 
 export async function withTimeout<T>(
   timeoutMs: number,
-  block: () => Promise<T>
+  block: () => T | Promise<T>
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       reject(new TimeoutError(`Operation timed out after ${timeoutMs}ms`))
     }, timeoutMs)
 
-    block()
+    Promise.resolve(block())
       .then((result) => {
         clearTimeout(timer)
         resolve(result)
@@ -252,7 +252,7 @@ export async function withTimeout<T>(
 
 export async function withTimeoutOrNull<T>(
   timeoutMs: number,
-  block: () => Promise<T>
+  block: () => T | Promise<T>
 ): Promise<T | null> {
   try {
     return await withTimeout(timeoutMs, block)
@@ -262,6 +262,6 @@ export async function withTimeoutOrNull<T>(
   }
 }
 
-export async function runBlocking<T>(block: () => Promise<T>): Promise<T> {
-  return block()
+export async function runBlocking<T>(block: () => T | Promise<T>): Promise<T> {
+  return Promise.resolve(block())
 }

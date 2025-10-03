@@ -100,38 +100,3 @@ export function downTo(start: number, endInclusive: number): IntRange {
 export function step(range: IntRange, stepValue: number): IntRange {
   return range.withStep(stepValue)
 }
-
-declare global {
-  interface Number {
-    rangeTo(endInclusive: number): IntRange
-    until(endExclusive: number): IntRange
-    downTo(endInclusive: number): IntRange
-  }
-}
-
-Object.defineProperty(Number.prototype, 'rangeTo', {
-  value: function (this: number, endInclusive: number): IntRange {
-    return rangeTo(this, endInclusive)
-  },
-  writable: true,
-  configurable: true,
-  enumerable: false,
-})
-
-Object.defineProperty(Number.prototype, 'until', {
-  value: function (this: number, endExclusive: number): IntRange {
-    return until(this, endExclusive)
-  },
-  writable: true,
-  configurable: true,
-  enumerable: false,
-})
-
-Object.defineProperty(Number.prototype, 'downTo', {
-  value: function (this: number, endInclusive: number): IntRange {
-    return downTo(this, endInclusive)
-  },
-  writable: true,
-  configurable: true,
-  enumerable: false,
-})

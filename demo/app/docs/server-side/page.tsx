@@ -97,9 +97,9 @@ app.post("/api/users", (req, res) => {
     );
 });
 
-Either.from(getRequestData(req))
-  .flatMap(data => validateSchema(data))
-  .flatMap(valid => processData(valid))
+tryCatch(() => getRequestData(req))
+  .flatMap(data => tryCatch(() => validateSchema(data)))
+  .flatMap(valid => tryCatch(() => processData(valid)))
   .map(result => transformResult(result))
   .fold(
     error => res.status(400).json({ error }),
@@ -114,7 +114,7 @@ Either.from(getRequestData(req))
           description="Run background tasks with coroutines and structured concurrency."
         >
           <CodeBlock
-            code={`import { launch, parallel, also } from 'kotlinify-ts/coroutines';
+            code={`import { launch, coroutineScope } from 'kotlinify-ts/coroutines';
 
 const queue = createJobQueue();
 queue.subscribe(job =>
@@ -127,13 +127,17 @@ queue.subscribe(job =>
     })
 );
 
-parallel([
-  () => sendEmails(batch),
-  () => processImages(batch),
-  () => generateReports(batch)
-])
-  .then(results => logResults(results))
-  .catch(error => notifyAdmin(error));`}
+await coroutineScope((scope) => {
+  const jobs = [
+    scope.launch(() => sendEmails(batch)),
+    scope.launch(() => processImages(batch)),
+    scope.launch(() => generateReports(batch))
+  ];
+
+  return Promise.all(jobs.map(j => j.join()))
+    .then(results => logResults(results))
+    .catch(error => notifyAdmin(error));
+});`}
             language="typescript"
           />
         </DocsSection>
@@ -200,14 +204,14 @@ tryCatch(() => cache.get(key))
         >
           <CodeBlock
             code={`import { windowed } from 'kotlinify-ts/collections';
-import { Option } from 'kotlinify-ts/monads';
+import { fromNullable } from 'kotlinify-ts/monads';
 
 const log = getRequestLog(userId);
 const windows = windowed(log, 100, 1);
 const recentWindows = windows.map(window => window.filter(isRecent));
 const exceeded = recentWindows.find(window => window.length > limit);
 
-Option.from(exceeded)
+fromNullable(exceeded)
   .fold(
     () => next(),
     () => res.status(429).json({ error: "Rate limit exceeded" })
@@ -226,21 +230,31 @@ requestFlow
           description="Process multiple operations in parallel with automatic error handling."
         >
           <CodeBlock
-            code={`import { parallelMap } from 'kotlinify-ts/coroutines';
+            code={`import { coroutineScope } from 'kotlinify-ts/coroutines';
 
-parallelMap(getUserIds(), id => fetchUserData(id))
-  .then(users => users.filter(Boolean))
-  .then(users => saveToCache(users))
-  .catch(error => logger.error("Batch failed:", error));
+await coroutineScope((scope) => {
+  const deferreds = getUserIds().map(id =>
+    scope.async(() => fetchUserData(id))
+  );
 
-parallel([
-  () => updateSearchIndex(),
-  () => regenerateSitemap(),
-  () => clearCache(),
-  () => notifySubscribers()
-])
-  .then(() => logger.info("Deployment tasks completed"))
-  .catch(error => rollbackDeployment(error));`}
+  return Promise.all(deferreds.map(d => d.await()))
+    .then(users => users.filter(Boolean))
+    .then(users => saveToCache(users))
+    .catch(error => logger.error("Batch failed:", error));
+});
+
+await coroutineScope((scope) => {
+  const tasks = [
+    scope.launch(() => updateSearchIndex()),
+    scope.launch(() => regenerateSitemap()),
+    scope.launch(() => clearCache()),
+    scope.launch(() => notifySubscribers())
+  ];
+
+  return Promise.all(tasks.map(t => t.join()))
+    .then(() => logger.info("Deployment tasks completed"))
+    .catch(error => rollbackDeployment(error));
+});`}
             language="typescript"
           />
         </DocsSection>

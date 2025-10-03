@@ -73,10 +73,10 @@ export function runCatching<T>(block: () => T): { success: boolean; value?: T; e
 }
 
 export async function runCatchingAsync<T>(
-  block: () => Promise<T>
+  block: () => T | Promise<T>
 ): Promise<{ success: boolean; value?: T; error?: Error }> {
   try {
-    return { success: true, value: await block() }
+    return { success: true, value: await Promise.resolve(block()) }
   } catch (error) {
     return { success: false, error: error as Error }
   }

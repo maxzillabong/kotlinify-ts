@@ -421,11 +421,11 @@ export function tryCatch<T, E = Error>(
 }
 
 export async function tryCatchAsync<T, E = Error>(
-  fn: () => Promise<T>,
+  fn: () => T | Promise<T>,
   onError?: (error: unknown) => E
 ): Promise<Result<T, E>> {
   try {
-    return Success(await fn())
+    return Success(await Promise.resolve(fn()))
   } catch (error) {
     return Failure(onError ? onError(error) : (error as E))
   }

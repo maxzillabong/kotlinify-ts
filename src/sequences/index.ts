@@ -543,13 +543,3 @@ export function asSequence<T>(iterable: Iterable<T>): Sequence<T> {
 export function generateSequence<T>(seed: T, nextFunction: (current: T) => T | null | undefined): Sequence<T> {
   return Sequence.generateSequence(seed, nextFunction)
 }
-
-declare global {
-  interface Array<T> {
-    asSequence(): Sequence<T>
-  }
-}
-
-Array.prototype.asSequence = function <T>(this: T[]): Sequence<T> {
-  return Sequence.from(this)
-}

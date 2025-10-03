@@ -26,21 +26,14 @@ for (const n of descending) {
   console.log(n); // 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
 }
 
-// With prototype extensions
-import 'kotlinify-ts/ranges';
-
-const inclusive = (1).rangeTo(10);    // 1..10
-const exclusive = (1).until(10);      // 1..<10
-const countdown = (10).downTo(1);     // 10..1
-
 // Convert to array
-const numbers = (1).rangeTo(5).toArray(); // [1, 2, 3, 4, 5]
+const numbers = rangeTo(1, 5).toArray(); // [1, 2, 3, 4, 5]
 
 // Check containment
-const isInRange = (1).rangeTo(10).contains(5); // true
-const isOutside = (1).until(10).contains(10);  // false`;
+const isInRange = rangeTo(1, 10).contains(5); // true
+const isOutside = until(1, 10).contains(10);  // false`;
 
-  const customStepsExample = `import { rangeTo, step } from 'kotlinify-ts/ranges';
+  const customStepsExample = `import { rangeTo, downTo, step } from 'kotlinify-ts/ranges';
 
 // Every second number
 const evens = step(rangeTo(0, 10), 2);
@@ -57,23 +50,23 @@ const countdown = step(downTo(100, 0), 10);
 console.log(countdown.toArray());
 // [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0]
 
-// With prototype extensions
-const multiplesOf5 = (0).rangeTo(50).withStep(5);
+// Using withStep method
+const multiplesOf5 = rangeTo(0, 50).withStep(5);
 // 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50
 
-const oddNumbers = (1).rangeTo(20).withStep(2);
+const oddNumbers = rangeTo(1, 20).withStep(2);
 // 1, 3, 5, 7, 9, 11, 13, 15, 17, 19
 
 // Chain with other operations
-const squares = (1).rangeTo(10)
+const squares = rangeTo(1, 10)
   .withStep(2)
   .toArray()
   .map(n => n * n); // [1, 9, 25, 49, 81]`;
 
-  const rangeOperationsExample = `import 'kotlinify-ts/ranges';
+  const rangeOperationsExample = `import { rangeTo } from 'kotlinify-ts/ranges';
 
 // Range properties
-const range = (1).rangeTo(10);
+const range = rangeTo(1, 10);
 
 console.log(range.first());     // 1
 console.log(range.last());      // 10
@@ -81,45 +74,45 @@ console.log(range.count());     // 10
 console.log(range.isEmpty);     // false
 
 // Empty ranges
-const empty = (10).rangeTo(1);  // Invalid ascending range
+const empty = rangeTo(10, 1);  // Invalid ascending range
 console.log(empty.isEmpty);     // true
 console.log(empty.count());     // 0
 console.log(empty.toArray());   // []
 
 // Range reversal
-const forward = (1).rangeTo(5);
+const forward = rangeTo(1, 5);
 const backward = forward.reversed();
 console.log(backward.toArray()); // [5, 4, 3, 2, 1]
 
 // Check membership
-const ageRange = (18).rangeTo(65);
+const ageRange = rangeTo(18, 65);
 const isEligible = ageRange.contains(25); // true
 const isTooYoung = ageRange.contains(16); // false
 
 // Iterate with forEach
-(1).rangeTo(5).forEach(n => {
+rangeTo(1, 5).forEach(n => {
   console.log(\`Processing item \${n}\`);
 });
 
 // Use with for...of
-for (const page of (1).rangeTo(totalPages)) {
+for (const page of rangeTo(1, totalPages)) {
   await processPa{ page);
 }`;
 
-  const practicalUseCasesExample = `import 'kotlinify-ts/ranges';
+  const practicalUseCasesExample = `import { rangeTo, until, downTo, step } from 'kotlinify-ts/ranges';
 
 // Pagination
 function paginate<T>(items: T[], pageSize: number, page: number): T[] {
   const start = (page - 1) * pageSize;
   const end = Math.min(start + pageSize, items.length);
 
-  return (start).until(end)
+  return until(start, end)
     .toArray()
     .map(i => items[i]);
 }
 
 // Generate test data
-const testUsers = (1).rangeTo(100)
+const testUsers = rangeTo(1, 100)
   .toArray()
   .map(id => ({
     id,
@@ -131,7 +124,7 @@ const testUsers = (1).rangeTo(100)
 // Calendar generation
 function getDaysInMonth(year: number, month: number): number[] {
   const lastDay = new Date(year, month + 1, 0).getDate();
-  return (1).rangeTo(lastDay).toArray();
+  return rangeTo(1, lastDay).toArray();
 }
 
 // Progress indicators
@@ -139,11 +132,11 @@ function renderProgressBar(current: number, total: number, width: number = 50): 
   const filled = Math.floor((current / total) * width);
   const empty = width - filled;
 
-  const bar = (1).rangeTo(filled)
+  const bar = rangeTo(1, filled)
     .toArray()
     .map(() => '█')
     .concat(
-      (1).rangeTo(empty)
+      rangeTo(1, empty)
         .toArray()
         .map(() => '░')
     )
@@ -157,7 +150,7 @@ async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   maxRetries: number = 3
 ): Promise<T> {
-  for (const attempt of (1).rangeTo(maxRetries)) {
+  for (const attempt of rangeTo(1, maxRetries)) {
     try {
       return await fn();
     } catch (error) {
@@ -179,8 +172,8 @@ function generateTimeSlots(
 ): string[] {
   const slots: string[] = [];
 
-  for (const hour of (startHour).until(endHour)) {
-    for (const minute of step((0).until(60), intervalMinutes)) {
+  for (const hour of until(startHour, endHour)) {
+    for (const minute of step(until(0, 60), intervalMinutes)) {
       const h = String(hour).padStart(2, '0');
       const m = String(minute).padStart(2, '0');
       slots.push(\`\${h}:\${m}\`);
@@ -194,8 +187,8 @@ function generateTimeSlots(
 function generateGrid(width: number, height: number): Array<[number, number]> {
   const coordinates: Array<[number, number]> = [];
 
-  for (const y of (0).until(height)) {
-    for (const x of (0).until(width)) {
+  for (const y of until(0, height)) {
+    for (const x of until(0, width)) {
       coordinates.push([x, y]);
     }
   }
@@ -203,10 +196,10 @@ function generateGrid(width: number, height: number): Array<[number, number]> {
   return coordinates;
 }`;
 
-  const performanceExample = `import 'kotlinify-ts/ranges';
+  const performanceExample = `import { rangeTo } from 'kotlinify-ts/ranges';
 
 // Lazy evaluation - ranges don't create arrays until needed
-const hugeRange = (1).rangeTo(1_000_000);
+const hugeRange = rangeTo(1, 1_000_000);
 
 // This is instant - no array created
 console.log(hugeRange.count()); // 1000000
@@ -218,7 +211,7 @@ for (const n of hugeRange) {
 }
 
 // Efficient containment checks
-const validIds = (1000).rangeTo(9999);
+const validIds = rangeTo(1000, 9999);
 function isValidId(id: number): boolean {
   return validIds.contains(id); // O(1) check
 }
@@ -226,7 +219,7 @@ function isValidId(id: number): boolean {
 // Memory-efficient iteration
 function* fibonacci(limit: number) {
   let [a, b] = [0, 1];
-  for (const _ of (1).rangeTo(limit)) {
+  for (const _ of rangeTo(1, limit)) {
     yield a;
     [a, b] = [b, a + b];
   }
@@ -236,7 +229,7 @@ function* fibonacci(limit: number) {
 async function processLargeDataset(totalItems: number, batchSize: number) {
   const batches = Math.ceil(totalItems / batchSize);
 
-  for (const batch of (1).rangeTo(batches)) {
+  for (const batch of rangeTo(1, batches)) {
     const start = (batch - 1) * batchSize;
     const end = Math.min(batch * batchSize, totalItems);
 
@@ -250,7 +243,7 @@ function sampleRange(start: number, end: number, samples: number): number[] {
   const range = end - start;
   const step = Math.floor(range / samples);
 
-  return (start).rangeTo(end)
+  return rangeTo(start, end)
     .withStep(step)
     .toArray()
     .slice(0, samples);
@@ -264,7 +257,7 @@ for (i in 1..10) {
 }
 
 // TypeScript with kotlinify-ts
-for (const i of (1).rangeTo(10)) {
+for (const i of rangeTo(1, 10)) {
   console.log(i)
 }
 
@@ -274,7 +267,7 @@ for (i in 1 until 10) {
 }
 
 // TypeScript with kotlinify-ts
-for (const i of (1).until(10)) {
+for (const i of until(1, 10)) {
   console.log(i)
 }
 
@@ -284,7 +277,7 @@ for (i in 10 downTo 1) {
 }
 
 // TypeScript with kotlinify-ts
-for (const i of (10).downTo(1)) {
+for (const i of downTo(10, 1)) {
   console.log(i)
 }
 
@@ -294,7 +287,7 @@ for (i in 1..10 step 2) {
 }
 
 // TypeScript with kotlinify-ts
-for (const i of (1).rangeTo(10).withStep(2)) {
+for (const i of rangeTo(1, 10).withStep(2)) {
   console.log(i)
 }
 
@@ -305,7 +298,7 @@ println(range.last)
 println(5 in range)
 
 // TypeScript with kotlinify-ts
-const range = (1).rangeTo(10);
+const range = rangeTo(1, 10);
 console.log(range.first());
 console.log(range.last());
 console.log(range.contains(5));`;
@@ -322,7 +315,7 @@ for (let i = 1; i <= 10; i++) {
 const nums = Array.from({ length: 10 }, (_, i) => i + 1);
 
 // kotlinify-ts - clear and concise
-const numbers = (1).rangeTo(10).toArray();
+const numbers = rangeTo(1, 10).toArray();
 
 // Iterating with steps
 // JavaScript - manual increment
@@ -331,7 +324,7 @@ for (let i = 0; i <= 100; i += 5) {
 }
 
 // kotlinify-ts - declarative
-for (const i of (0).rangeTo(100).withStep(5)) {
+for (const i of rangeTo(0, 100).withStep(5)) {
   console.log(i);
 }
 
@@ -342,7 +335,7 @@ for (let i = 10; i >= 1; i--) {
 }
 
 // kotlinify-ts - intention is clear
-for (const i of (10).downTo(1)) {
+for (const i of downTo(10, 1)) {
   console.log(i);
 }
 
@@ -353,7 +346,7 @@ function isInRange(value, min, max) {
 }
 
 // kotlinify-ts - semantic
-const range = (min).rangeTo(max);
+const range = rangeTo(min, max);
 const isInRange = range.contains(value);
 
 // Generating sequences
@@ -364,7 +357,7 @@ for (let i = 0; i <= 20; i++) {
 }
 
 // kotlinify-ts - functional and clear
-const evens = (0).rangeTo(20).withStep(2).toArray();`;
+const evens = rangeTo(0, 20).withStep(2).toArray();`;
 
   return (
     <DocsPageLayout>
@@ -420,33 +413,33 @@ const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
           <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-lg p-6 mb-6">
             <h4 className="text-xl font-semibold text-white mb-4">Ranges: How Loops Should Have Worked All Along</h4>
             <CodeBlock
-              code={`import 'kotlinify-ts/ranges';
+              code={`import { rangeTo, until, downTo } from 'kotlinify-ts/ranges';
 
 // Want 1 through 10? Say it.
-for (const i of (1).rangeTo(10)) {
+for (const i of rangeTo(1, 10)) {
   console.log(i); // 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 }
 
 // Want 1 up to but not including 10? Say that too.
-for (const i of (1).until(10)) {
+for (const i of until(1, 10)) {
   console.log(i); // 1, 2, 3, 4, 5, 6, 7, 8, 9
 }
 
 // Counting down? Crystal clear.
-for (const i of (10).downTo(1)) {
+for (const i of downTo(10, 1)) {
   console.log(i); // 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
 }
 
 // Every 5th number? Just add a step.
-for (const i of (0).rangeTo(100).withStep(5)) {
+for (const i of rangeTo(0, 100).withStep(5)) {
   process(i); // 0, 5, 10, 15, ..., 100
 }
 
 // Need an array? One method.
-const pages = (1).rangeTo(totalPages).toArray();
+const pages = rangeTo(1, totalPages).toArray();
 
 // Check if in range? Semantic and obvious.
-if ((18).rangeTo(65).contains(age)) {
+if (rangeTo(18, 65).contains(age)) {
   console.log("Eligible");
 }
 
@@ -551,14 +544,6 @@ if ((18).rangeTo(65).contains(age)) {
                 <li><code className="text-slate-500">toArray()</code> - Convert to array of numbers</li>
                 <li><code className="text-slate-500">forEach(fn)</code> - Iterate with callback</li>
                 <li><code className="text-slate-500">isEmpty</code> - Check if range is empty</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-3">Prototype Extensions</h4>
-              <ul className="space-y-2 text-sm">
-                <li><code className="text-slate-500">(n).rangeTo(m)</code> - Create inclusive range</li>
-                <li><code className="text-slate-500">(n).until(m)</code> - Create exclusive range</li>
-                <li><code className="text-slate-500">(n).downTo(m)</code> - Create descending range</li>
               </ul>
             </div>
             <div>

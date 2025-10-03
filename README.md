@@ -144,7 +144,7 @@ Never leak resources or lose errors in concurrent operations:
 import { coroutineScope, launch, asyncValue, delay, withTimeout } from 'kotlinify-ts';
 
 // Parallel operations with automatic cancellation
-await coroutineScope(async (scope) => {
+await coroutineScope((scope) => {
   // Launch parallel tasks
   const job1 = scope.launch(() => processDataset1());
   const job2 = scope.launch(() => processDataset2());
@@ -160,7 +160,7 @@ await coroutineScope(async (scope) => {
 });
 
 // Timeout with automatic cleanup
-const result = await withTimeout(5000, async () => {
+const result = await withTimeout(5000, () => {
   const data = await fetchData();
   await processData(data);
   return data;
@@ -172,15 +172,15 @@ const result = await withTimeout(5000, async () => {
 Handle errors and nulls without a single if statement:
 
 ```typescript
-import { Result, Option } from 'kotlinify-ts';
+import { Result, tryCatch, Success, Failure, Option, fromNullable } from 'kotlinify-ts';
 
 // Chain operations that might fail
 const processUser = (id: string): Result<User, Error> =>
-  Result.try(() => fetchUser(id))
+  tryCatch(() => fetchUser(id))
     .flatMap(user =>
       user.isActive
-        ? Result.success(user)
-        : Result.failure(new Error('User inactive'))
+        ? Success(user)
+        : Failure(new Error('User inactive'))
     )
     .map(user => ({
       ...user,
@@ -195,7 +195,7 @@ const output = processUser('123').fold(
 );
 
 // Option for nullable values
-const config = Option.fromNullable(process.env.CONFIG)
+const config = fromNullable(process.env.CONFIG)
   .map(c => JSON.parse(c))
   .filter(c => c.version === '2.0')
   .getOrElse(defaultConfig);

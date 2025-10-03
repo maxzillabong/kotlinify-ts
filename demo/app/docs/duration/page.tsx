@@ -8,16 +8,15 @@ import { DocsSection } from "@/components/DocsSection";
 export default function DurationPage() {
   const introductionExample = `import { Duration, seconds, minutes, hours } from 'kotlinify-ts/duration';
 
-// Three ways to create durations
+// Two ways to create durations
 const timeout = Duration.seconds(30);
 const delay = seconds(5);
 const meetingLength = minutes(45);
 
-// Number extensions (requires import for types)
-import 'kotlinify-ts/duration';
-const videoLength = (2).hours.plus((35).minutes);
-const apiTimeout = (30).seconds;
-const frameTime = (16.67).milliseconds;`;
+// Chaining operations
+const videoLength = hours(2).plus(minutes(35));
+const apiTimeout = seconds(30);
+const frameTime = milliseconds(16.67);`;
 
   const constructionExample = `import { Duration, seconds, minutes, hours, days, milliseconds, microseconds, nanoseconds } from 'kotlinify-ts/duration';
 
@@ -37,12 +36,11 @@ const workday = hours(8);
 const instant = Duration.zero();
 const forever = Duration.infinite();
 
-// Number prototype extensions
-import 'kotlinify-ts/duration';
-const quick = (100).milliseconds;
-const standard = (30).seconds;
-const meeting = (1.5).hours;
-const sprint = (14).days;`;
+// Fractional durations
+const quick = milliseconds(100);
+const standard = seconds(30);
+const meeting = hours(1.5);
+const sprint = days(14);`;
 
   const arithmeticExample = `import { Duration, seconds, minutes, hours } from 'kotlinify-ts/duration';
 
@@ -205,14 +203,13 @@ const totalSeconds = duration.toComponents((d, h, m, s) =>
 // 9345`;
 
   const realWorldExample = `import { Duration, seconds, minutes, milliseconds } from 'kotlinify-ts/duration';
-import 'kotlinify-ts/duration';
 
 // API retry with exponential backoff
 async function retryWithBackoff<T>(
   operation: () => Promise<T>,
   maxAttempts = 3
 ): Promise<T> {
-  let delay = (100).milliseconds;
+  let delay = milliseconds(100);
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -521,10 +518,9 @@ class TimeoutManager {
             <div>
               <h4 className="text-white font-semibold mb-2">Construction</h4>
               <ul className="list-disc list-inside space-y-1">
-                <li><code>Duration.seconds(n)</code>, <code>Duration.minutes(n)</code>, <code>Duration.hours(n)</code>, <code>Duration.days(n)</code></li>
-                <li><code>Duration.milliseconds(n)</code>, <code>Duration.microseconds(n)</code>, <code>Duration.nanoseconds(n)</code></li>
+                <li><code>Duration.seconds(n)</code>, <code>Duration.minutes(n)</code>, <code>Duration.hours(n)</code>, <code>Duration.days(n)</code> - static methods</li>
+                <li><code>Duration.milliseconds(n)</code>, <code>Duration.microseconds(n)</code>, <code>Duration.nanoseconds(n)</code> - static methods</li>
                 <li><code>seconds(n)</code>, <code>minutes(n)</code>, <code>hours(n)</code>, <code>days(n)</code> - standalone functions</li>
-                <li><code>(30).seconds</code>, <code>(5).minutes</code> - number extensions</li>
                 <li><code>Duration.zero()</code>, <code>Duration.infinite()</code> - special values</li>
               </ul>
             </div>

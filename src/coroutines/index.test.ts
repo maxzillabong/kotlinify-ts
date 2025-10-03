@@ -290,7 +290,7 @@ describe('coroutineScope', () => {
   it('creates scope and waits for children', async () => {
     const order: number[] = []
 
-    await coroutineScope(async (scope) => {
+    await coroutineScope((scope) => {
       scope.launch(async function () {
         await delay(20)
         order.push(2)
@@ -312,7 +312,7 @@ describe('coroutineScope', () => {
     let childCancelled = false
 
     try {
-      await coroutineScope(async (s) => {
+      await coroutineScope((s) => {
         s.launch(async function () {
           this.onCancel(() => {
             childCancelled = true
@@ -331,7 +331,7 @@ describe('coroutineScope', () => {
   })
 
   it('returns result', async () => {
-    const result = await coroutineScope(async () => {
+    const result = await coroutineScope(() => {
       return 42
     })
     expect(result).toBe(42)
@@ -433,10 +433,10 @@ describe('integration', () => {
   it('structured concurrency with nested scopes', async () => {
     const order: string[] = []
 
-    await coroutineScope(async (outer) => {
+    await coroutineScope((outer) => {
       outer.launch(async function () {
         order.push('outer-start')
-        await coroutineScope(async (inner) => {
+        await coroutineScope((inner) => {
           inner.launch(async function () {
             await delay(10)
             order.push('inner')

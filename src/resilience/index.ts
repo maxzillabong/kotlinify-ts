@@ -192,13 +192,13 @@ export class Schedule<Input, Output> {
     })
   }
 
-  async retry<A>(action: () => Promise<A>): Promise<A> {
+  async retry<A>(action: () => A | Promise<A>): Promise<A> {
     let state = this.initial
     let attempts = 0
 
     while (true) {
       try {
-        return await action()
+        return await Promise.resolve(action())
       } catch (error) {
         const decision = this.update(error as Input, state)
 
@@ -216,9 +216,9 @@ export class Schedule<Input, Output> {
     }
   }
 
-  async repeat<A>(action: () => Promise<A>): Promise<Output> {
+  async repeat<A>(action: () => A | Promise<A>): Promise<Output> {
     let state = this.initial
-    let result: A = await action()
+    let result: A = await Promise.resolve(action())
 
     while (true) {
       const decision = this.update(result as Input, state)
@@ -233,18 +233,18 @@ export class Schedule<Input, Output> {
         await new Promise((resolve) => setTimeout(resolve, decision.delay))
       }
 
-      result = await action()
+      result = await Promise.resolve(action())
     }
   }
 
   async repeatOrElse<A, B>(
-    action: () => Promise<A>,
+    action: () => A | Promise<A>,
     orElse: (error: unknown, state: Output) => B
   ): Promise<Output | B> {
     let state = this.initial
 
     try {
-      let result: A = await action()
+      let result: A = await Promise.resolve(action())
 
       while (true) {
         const decision = this.update(result as Input, state)
@@ -259,7 +259,7 @@ export class Schedule<Input, Output> {
           await new Promise((resolve) => setTimeout(resolve, decision.delay))
         }
 
-        result = await action()
+        result = await Promise.resolve(action())
       }
     } catch (error) {
       return orElse(error, state)
@@ -269,14 +269,14 @@ export class Schedule<Input, Output> {
 
 export async function retry<A>(
   schedule: Schedule<unknown, unknown>,
-  action: () => Promise<A>
+  action: () => A | Promise<A>
 ): Promise<A> {
   return schedule.retry(action)
 }
 
 export async function repeat<A, Output>(
   schedule: Schedule<A, Output>,
-  action: () => Promise<A>
+  action: () => A | Promise<A>
 ): Promise<Output> {
   return schedule.repeat(action)
 }

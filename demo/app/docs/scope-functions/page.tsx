@@ -108,10 +108,10 @@ return asScope(fetchUser(id))
           description="One import unlocks the full power of chainable scope functions"
         >
           <div className="bg-card border-l-4 border-l-blue-500 border border-border rounded-lg p-6">
-            <h4 className="text-xl font-semibold text-foreground mb-3">🚀 Enable the Magic</h4>
+            <h4 className="text-xl font-semibold text-foreground mb-3">🚀 Chainable Scope Functions</h4>
             <p className="text-muted-foreground mb-4">
-              The true power of kotlinify-ts comes from its chainable API. With one simple import,
-              every value in your codebase gains the ability to flow through elegant transformation pipelines.
+              The true power of kotlinify-ts comes from its chainable API. Wrap any value with asScope()
+              to create elegant transformation pipelines with zero prototype pollution.
             </p>
             <CodeBlock
               code={`import { asScope } from 'kotlinify-ts/scope';

@@ -291,14 +291,15 @@ asScope(fetchData())
             </p>
 
             <div className="bg-black/30 rounded-lg p-6 mb-6">
-              <h4 className="text-lg font-semibold text-slate-400 mb-3">Enable the Magic with One Line</h4>
-              <CodeBlock code={`import 'kotlinify-ts';
+              <h4 className="text-lg font-semibold text-slate-400 mb-3">Clean, Functional Pipelines</h4>
+              <CodeBlock code={`import { asScope } from 'kotlinify-ts';
 
 // Transform any value through a pipeline
-const result = getValue()
+const result = asScope(getValue())
   .let(v => process(v))
   .also(v => log(v))
-  .let(v => format(v));
+  .let(v => format(v))
+  .value();
 
 // No intermediate variables
 // No nested callbacks
@@ -329,14 +330,14 @@ const result = getValue()
             </div>
           </div>
 
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mt-6">
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mt-6">
             <div className="flex items-start gap-3">
-              <div className="text-amber-400 font-bold text-lg mt-0.5">⚡</div>
+              <div className="text-blue-400 font-bold text-lg mt-0.5">🎯</div>
               <div>
-                <h4 className="text-amber-300 font-semibold mb-2">One Import, Infinite Possibilities</h4>
-                <p className="text-amber-200/90 text-sm">
-                  Just <code className="bg-black/30 px-2 py-0.5 rounded">import 'kotlinify-ts'</code> at your app's entry point,
-                  and every object in your codebase gains superpowers. It's that simple.
+                <h4 className="text-blue-300 font-semibold mb-2">Zero Prototype Pollution</h4>
+                <p className="text-blue-200/90 text-sm">
+                  Use <code className="bg-black/30 px-2 py-0.5 rounded">asScope()</code> for chainable scope functions, or import standalone utilities.
+                  No global modifications, no side effects - just clean, explicit imports.
                 </p>
               </div>
             </div>

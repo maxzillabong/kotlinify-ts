@@ -468,37 +468,37 @@ describe('Duration', () => {
     })
   })
 
-  describe('prototype extensions', () => {
-    it('creates duration from number.nanoseconds', () => {
-      expect((1000).nanoseconds.inWholeNanoseconds).toBe(1000)
+  describe('standalone duration functions', () => {
+    it('creates duration from nanoseconds', () => {
+      expect(nanoseconds(1000).inWholeNanoseconds).toBe(1000)
     })
 
-    it('creates duration from number.microseconds', () => {
-      expect((1000).microseconds.inWholeMicroseconds).toBe(1000)
+    it('creates duration from microseconds', () => {
+      expect(microseconds(1000).inWholeMicroseconds).toBe(1000)
     })
 
-    it('creates duration from number.milliseconds', () => {
-      expect((1000).milliseconds.inWholeMilliseconds).toBe(1000)
+    it('creates duration from milliseconds', () => {
+      expect(milliseconds(1000).inWholeMilliseconds).toBe(1000)
     })
 
-    it('creates duration from number.seconds', () => {
-      expect((60).seconds.inWholeMinutes).toBe(1)
+    it('creates duration from seconds', () => {
+      expect(seconds(60).inWholeMinutes).toBe(1)
     })
 
-    it('creates duration from number.minutes', () => {
-      expect((60).minutes.inWholeHours).toBe(1)
+    it('creates duration from minutes', () => {
+      expect(minutes(60).inWholeHours).toBe(1)
     })
 
-    it('creates duration from number.hours', () => {
-      expect((24).hours.inWholeDays).toBe(1)
+    it('creates duration from hours', () => {
+      expect(hours(24).inWholeDays).toBe(1)
     })
 
-    it('creates duration from number.days', () => {
-      expect((7).days.inWholeDays).toBe(7)
+    it('creates duration from days', () => {
+      expect(days(7).inWholeDays).toBe(7)
     })
 
     it('allows chaining with arithmetic', () => {
-      const d = (30).minutes.plus((15).seconds)
+      const d = minutes(30).plus(seconds(15))
       expect(d.inWholeSeconds).toBe(1815)
     })
   })
@@ -513,13 +513,13 @@ describe('Duration', () => {
     })
 
     it('formats API timeout', () => {
-      const timeout = (30).seconds
+      const timeout = seconds(30)
       expect(timeout.toString()).toBe('30s')
       expect(timeout.inWholeMilliseconds).toBe(30000)
     })
 
     it('calculates video duration', () => {
-      const duration = (2).hours.plus((35).minutes).plus((12).seconds)
+      const duration = hours(2).plus(minutes(35)).plus(seconds(12))
       expect(duration.inWholeSeconds).toBe(9312)
       expect(duration.toString()).toContain('2h')
       expect(duration.toString()).toContain('35m')
