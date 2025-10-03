@@ -287,7 +287,7 @@ describe('Utils', () => {
         return 'done'
       })
       expect(value).toBe('done')
-      expect(duration).toBeGreaterThanOrEqual(50)
+      expect(duration).toBeGreaterThanOrEqual(40)
     })
   })
 

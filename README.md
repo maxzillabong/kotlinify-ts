@@ -11,6 +11,8 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/kotlinify-ts"><img src="https://img.shields.io/npm/v/kotlinify-ts.svg" alt="npm version"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://github.com/maxzillabong/kotlinify-ts/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/maxzillabong/kotlinify-ts/ci.yml?branch=main&label=CI" alt="CI status"></a>
+  <a href="https://github.com/maxzillabong/kotlinify-ts/actions/workflows/coverage.yml"><img src="https://img.shields.io/github/actions/workflow/status/maxzillabong/kotlinify-ts/coverage.yml?branch=main&label=coverage" alt="Coverage status"></a>
 </p>
 
 ## The Problem You Face Every Day
