@@ -126,25 +126,17 @@ export function CodeBlock({ code, language = "typescript", showLineNumbers = fal
     try {
       const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
       const executableCode = `
-        const sequences = await import('kotlinify/sequences');
-        const scope = await import('kotlinify/scope');
-        const flow = await import('kotlinify/flow');
-        const monads = await import('kotlinify/monads');
-        const coroutines = await import('kotlinify/coroutines');
-        const collections = await import('kotlinify/collections');
-        const strings = await import('kotlinify/strings');
-        const ranges = await import('kotlinify/ranges');
-        const duration = await import('kotlinify/duration');
+        const K = await import('kotlinify');
 
-        const { asSequence, sequenceOf, generateSequence, Sequence } = sequences;
-        const { asScope } = scope;
-        const { flowOf, flow: createFlow } = flow;
-        const { Result, Option, fromNullable, Success, Failure, tryCatch, Some, None } = monads;
-        const { coroutineScope, launch, async: asyncValue, delay, withTimeout } = coroutines;
-        const { groupBy, associateBy, chunked, windowed, zip, slice } = collections;
-        const { trimIndent, trimMargin, lines } = strings;
-        const { rangeTo, until, downTo, IntRange } = ranges;
-        const { Duration } = duration;
+        const { asSequence, sequenceOf, generateSequence, Sequence } = K;
+        const { asScope } = K;
+        const { flowOf, flow } = K;
+        const { Result, Option, fromNullable, Success, Failure, tryCatch, Some, None } = K;
+        const { coroutineScope, launch, delay, withTimeout } = K;
+        const { groupBy, associateBy, chunked, windowed, zip, slice } = K;
+        const { trimIndent, trimMargin, lines } = K;
+        const { rangeTo, until, downTo, IntRange } = K;
+        const { Duration } = K;
 
         ${code}
       `;
