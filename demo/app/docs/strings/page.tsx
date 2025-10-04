@@ -535,7 +535,6 @@ const doc = trimMargin(\`
 console.log('\\nWith margin removed:');
 console.log(doc);`}
             language="typescript"
-            executable={true}
           />
         </DocsSection>
 

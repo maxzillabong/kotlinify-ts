@@ -167,9 +167,7 @@ Sequence.from(new Set([1, 2, 3]))
           description="Create infinite sequences that are evaluated lazily - perfect for generating data on-demand."
         >
           <CodeBlock
-            code={`import { generateSequence, sequenceOf } from 'kotlinify-ts/sequences';
-
-// Fibonacci sequence
+            code={`// Fibonacci sequence
 const fibonacci = generateSequence([0, 1], ([a, b]) => [b, a + b])
   .map(([a]) => a)
   .take(10)
