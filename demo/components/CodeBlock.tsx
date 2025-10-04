@@ -126,15 +126,15 @@ export function CodeBlock({ code, language = "typescript", showLineNumbers = fal
     try {
       const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
       const executableCode = `
-        const sequences = await import('../../src/sequences/index.ts');
-        const scope = await import('../../src/scope/index.ts');
-        const flow = await import('../../src/flow/index.ts');
-        const monads = await import('../../src/monads/index.ts');
-        const coroutines = await import('../../src/coroutines/index.ts');
-        const collections = await import('../../src/collections/index.ts');
-        const strings = await import('../../src/strings/index.ts');
-        const ranges = await import('../../src/ranges/index.ts');
-        const duration = await import('../../src/duration/index.ts');
+        const sequences = await import('kotlinify-ts/sequences');
+        const scope = await import('kotlinify-ts/scope');
+        const flow = await import('kotlinify-ts/flow');
+        const monads = await import('kotlinify-ts/monads');
+        const coroutines = await import('kotlinify-ts/coroutines');
+        const collections = await import('kotlinify-ts/collections');
+        const strings = await import('kotlinify-ts/strings');
+        const ranges = await import('kotlinify-ts/ranges');
+        const duration = await import('kotlinify-ts/duration');
 
         const { asSequence, sequenceOf, generateSequence, Sequence } = sequences;
         const { asScope } = scope;
