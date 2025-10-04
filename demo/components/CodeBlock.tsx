@@ -126,7 +126,7 @@ export function CodeBlock({ code, language = "typescript", showLineNumbers = fal
     try {
       const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
       const executableCode = `
-        const K = await import('/lib/kotlinify.mjs');
+        const K = await import('kotlinify-ts');
 
         const { asSequence, sequenceOf, generateSequence, Sequence } = K;
         const { asScope } = K;
