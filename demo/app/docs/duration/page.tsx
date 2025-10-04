@@ -455,6 +455,26 @@ class TimeoutManager {
           description="Multiple ways to construct durations - choose the syntax that best fits your code style"
         >
           <CodeBlock code={constructionExample} language="typescript" />
+
+          <h4 className="text-lg font-semibold text-foreground mt-6 mb-3">Try it yourself:</h4>
+          <CodeBlock
+            code={`// Create durations from numbers
+const fiveSeconds = Duration.seconds(5);
+const twoMinutes = Duration.minutes(2);
+const oneHour = Duration.hours(1);
+
+console.log('5 seconds:', fiveSeconds.toString());
+console.log('2 minutes:', twoMinutes.toString());
+console.log('1 hour:', oneHour.toString());
+
+// Arithmetic operations
+const total = fiveSeconds.plus(twoMinutes).plus(oneHour);
+console.log('Total:', total.toString());
+console.log('In seconds:', total.inWholeSeconds);
+console.log('In minutes:', total.inWholeMinutes);`}
+            language="typescript"
+            executable={true}
+          />
         </DocsSection>
 
         <DocsSection

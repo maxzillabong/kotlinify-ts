@@ -189,6 +189,31 @@ const completed = deferred.getCompleted(); // undefined if not ready`}
             language="typescript"
           />
 
+          <h4 className="text-lg font-semibold text-foreground mt-6 mb-3">Try it yourself:</h4>
+          <CodeBlock
+            code={`// Launch a simple coroutine
+const job = launch(async () => {
+  await delay(100);
+  console.log('Job completed!');
+  return 'done';
+});
+
+console.log('Job launched, waiting...');
+await job.join();
+console.log('Job finished');
+
+// Use async for values
+const result = async(async () => {
+  await delay(50);
+  return 42;
+});
+
+const value = await result.await();
+console.log('Result:', value);`}
+            language="typescript"
+            executable={true}
+          />
+
           <h3 className="text-xl font-semibold text-foreground mt-6 mb-3">CoroutineScope</h3>
           <p className="text-muted-foreground mb-4">
             A scope that manages multiple coroutines and propagates cancellation.

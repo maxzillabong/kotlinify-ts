@@ -512,6 +512,31 @@ const result = sql
           description="Clean up indentation and margins in multi-line strings with ease."
         >
           <CodeBlock code={multilineStringsExample} language="typescript" />
+
+          <h4 className="text-lg font-semibold text-foreground mt-6 mb-3">Try it yourself:</h4>
+          <CodeBlock
+            code={`// Clean up indented strings
+const code = trimIndent(\`
+    function hello() {
+      console.log('Hello!');
+    }
+\`);
+
+console.log('Trimmed:');
+console.log(code);
+
+// Remove margin prefix
+const doc = trimMargin(\`
+    |## Title
+    |This is content
+    |More content
+\`);
+
+console.log('\\nWith margin removed:');
+console.log(doc);`}
+            language="typescript"
+            executable={true}
+          />
         </DocsSection>
 
         <DocsSection

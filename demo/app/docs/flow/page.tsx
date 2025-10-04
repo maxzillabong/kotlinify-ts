@@ -241,6 +241,24 @@ await dataStream()
   .collect(results => saveResults(results));`}
             language="typescript"
           />
+
+          <h4 className="text-lg font-semibold text-foreground mt-6 mb-3">Try it yourself:</h4>
+          <CodeBlock
+            code={`// Basic flow transformations
+await flowOf(1, 2, 3, 4, 5, 6)
+  .map(x => x * 2)
+  .filter(x => x > 5)
+  .take(3)
+  .collect(x => console.log('Value:', x));
+
+console.log('---');
+
+// Create a simple flow
+const numbers = flowOf(10, 20, 30, 40);
+await numbers.collect(n => console.log('Number:', n));`}
+            language="typescript"
+            executable={true}
+          />
         </DocsSection>
 
         <DocsSection
