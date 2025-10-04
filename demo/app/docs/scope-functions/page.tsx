@@ -207,6 +207,30 @@ const processed = asScope(fetchData())
   .value();`}
               language="typescript"
             />
+
+            <h4 className="text-lg font-semibold text-foreground mt-6 mb-3">Try it yourself:</h4>
+            <CodeBlock
+              code={`// Transform user data with let
+const user = { name: "Alice", age: 30 };
+
+const greeting = asScope(user)
+  .let(u => \`\${u.name}, age \${u.age}\`)
+  .let(text => text.toUpperCase())
+  .value();
+
+console.log(greeting);
+
+// Chain multiple transformations
+const result = asScope(10)
+  .let(x => x * 2)    // 20
+  .let(x => x + 5)    // 25
+  .let(x => x ** 2)   // 625
+  .value();
+
+console.log('Result:', result);`}
+              language="typescript"
+              executable={true}
+            />
           </div>
         </DocsSection>
 
@@ -288,6 +312,33 @@ const component = asScope(createComponent())
   })
   .value();`}
               language="typescript"
+            />
+
+            <h4 className="text-lg font-semibold text-foreground mt-6 mb-3">Try it yourself:</h4>
+            <CodeBlock
+              code={`// Configure an object with apply
+const config = asScope({})
+  .apply(cfg => {
+    cfg.name = 'MyApp';
+    cfg.version = '1.0.0';
+    cfg.debug = true;
+  })
+  .value();
+
+console.log('Config:', JSON.stringify(config, null, 2));
+
+// Chain apply with let
+const settings = asScope({ theme: 'dark' })
+  .apply(s => {
+    s.fontSize = 14;
+    s.lineHeight = 1.5;
+  })
+  .let(s => \`Theme: \${s.theme}, Font: \${s.fontSize}px\`)
+  .value();
+
+console.log(settings);`}
+              language="typescript"
+              executable={true}
             />
           </div>
         </DocsSection>

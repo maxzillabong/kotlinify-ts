@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Play } from "lucide-react";
 
 const customLightTheme = {
   'code[class*="language-"]': {
@@ -86,10 +86,13 @@ interface CodeBlockProps {
   code: string;
   language?: string;
   showLineNumbers?: boolean;
+  executable?: boolean;
 }
 
-export function CodeBlock({ code, language = "typescript", showLineNumbers = false }: CodeBlockProps) {
+export function CodeBlock({ code, language = "typescript", showLineNumbers = false, executable = false }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
+  const [output, setOutput] = useState<string[]>([]);
+  const [isExecuting, setIsExecuting] = useState(false);
   const isDark = true;
 
   const handleCopy = async () => {
@@ -98,40 +101,132 @@ export function CodeBlock({ code, language = "typescript", showLineNumbers = fal
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleExecute = async () => {
+    setIsExecuting(true);
+    setOutput([]);
+    const logs: string[] = [];
+
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+
+    console.log = (...args: unknown[]) => {
+      logs.push(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)).join(' '));
+      originalLog(...args);
+    };
+    console.error = (...args: unknown[]) => {
+      logs.push(`ERROR: ${args.map(arg => String(arg)).join(' ')}`);
+      originalError(...args);
+    };
+    console.warn = (...args: unknown[]) => {
+      logs.push(`WARN: ${args.map(arg => String(arg)).join(' ')}`);
+      originalWarn(...args);
+    };
+
+    try {
+      const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+      const executableCode = `
+        const sequences = await import('@/../../src/sequences/index.ts');
+        const scope = await import('@/../../src/scope/index.ts');
+        const flow = await import('@/../../src/flow/index.ts');
+        const monads = await import('@/../../src/monads/index.ts');
+        const coroutines = await import('@/../../src/coroutines/index.ts');
+        const collections = await import('@/../../src/collections/index.ts');
+        const strings = await import('@/../../src/strings/index.ts');
+        const ranges = await import('@/../../src/ranges/index.ts');
+        const duration = await import('@/../../src/duration/index.ts');
+
+        const { asSequence, sequenceOf, generateSequence, Sequence } = sequences;
+        const { asScope } = scope;
+        const { flowOf, flow: createFlow } = flow;
+        const { Result, Option, fromNullable, Success, Failure, tryCatch, Some, None } = monads;
+        const { coroutineScope, launch, async: asyncValue, delay, withTimeout } = coroutines;
+        const { groupBy, associateBy, chunked, windowed, zip, slice } = collections;
+        const { trimIndent, trimMargin, lines } = strings;
+        const { rangeTo, until, downTo, IntRange } = ranges;
+        const { Duration } = duration;
+
+        ${code}
+      `;
+      await new AsyncFunction(executableCode)();
+
+      if (logs.length === 0) {
+        logs.push('// Code executed successfully (no output)');
+      }
+    } catch (error) {
+      logs.push(`ERROR: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      console.log = originalLog;
+      console.error = originalError;
+      console.warn = originalWarn;
+      setOutput(logs);
+      setIsExecuting(false);
+    }
+  };
+
   return (
-    <div className="group relative">
-      <button
-        onClick={handleCopy}
-        className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-all opacity-0 group-hover:opacity-100 hover:-translate-y-0.5 hover:text-foreground hover:shadow-md"
-        aria-label="Copy code"
-      >
-        {copied ? (
-          <Check className="h-4 w-4 text-emerald-500" />
-        ) : (
-          <Copy className="h-4 w-4" />
-        )}
-      </button>
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-inner">
-        <SyntaxHighlighter
-          language={language}
-          style={isDark ? vscDarkPlus : customLightTheme}
-          customStyle={{
-            margin: 0,
-            padding: "1.5rem",
-            background: "transparent",
-            fontSize: "0.9rem",
-            lineHeight: 1.6,
-          }}
-          codeTagProps={{
-            style: {
-              fontFamily: "var(--font-geist-mono)",
-            },
-          }}
-          showLineNumbers={showLineNumbers}
-        >
-          {code}
-        </SyntaxHighlighter>
+    <div className="space-y-3">
+      <div className="group relative">
+        <div className="absolute right-3 top-3 flex gap-2 z-10">
+          {executable && (
+            <button
+              onClick={handleExecute}
+              disabled={isExecuting}
+              className="flex h-9 px-3 items-center justify-center gap-2 rounded-lg border border-border bg-card text-muted-foreground transition-all opacity-0 group-hover:opacity-100 hover:-translate-y-0.5 hover:text-foreground hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Run code"
+            >
+              <Play className="h-4 w-4" />
+              <span className="text-sm font-medium">{isExecuting ? 'Running...' : 'Run'}</span>
+            </button>
+          )}
+          <button
+            onClick={handleCopy}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-all opacity-0 group-hover:opacity-100 hover:-translate-y-0.5 hover:text-foreground hover:shadow-md"
+            aria-label="Copy code"
+          >
+            {copied ? (
+              <Check className="h-4 w-4 text-emerald-500" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </button>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-inner">
+          <SyntaxHighlighter
+            language={language}
+            style={isDark ? vscDarkPlus : customLightTheme}
+            customStyle={{
+              margin: 0,
+              padding: "1.5rem",
+              background: "transparent",
+              fontSize: "0.9rem",
+              lineHeight: 1.6,
+            }}
+            codeTagProps={{
+              style: {
+                fontFamily: "var(--font-geist-mono)",
+              },
+            }}
+            showLineNumbers={showLineNumbers}
+          >
+            {code}
+          </SyntaxHighlighter>
+        </div>
       </div>
+      {output.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card shadow-inner">
+          <div className="border-b border-border px-4 py-2 bg-muted/50">
+            <span className="text-sm font-medium text-foreground">Output</span>
+          </div>
+          <div className="p-4 font-mono text-sm space-y-1">
+            {output.map((line, idx) => (
+              <div key={idx} className={line.startsWith('ERROR:') ? 'text-red-500' : line.startsWith('WARN:') ? 'text-yellow-500' : 'text-foreground'}>
+                {line}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

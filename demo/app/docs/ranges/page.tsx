@@ -477,6 +477,29 @@ if (rangeTo(18, 65).contains(age)) {
           description="Simple, expressive ways to define numeric progressions."
         >
           <CodeBlock code={basicRangesExample} language="typescript" />
+
+          <h4 className="text-lg font-semibold text-foreground mt-6 mb-3">Try it yourself:</h4>
+          <CodeBlock
+            code={`// Create and iterate ranges
+const range = rangeTo(1, 5);
+console.log('Range 1-5:', range.toArray());
+
+const exclusive = until(1, 5);
+console.log('Until 5:', exclusive.toArray());
+
+const descending = downTo(10, 6);
+console.log('Down to 6:', descending.toArray());
+
+// With custom steps
+const evens = rangeTo(0, 10).withStep(2);
+console.log('Evens:', evens.toArray());
+
+// Check containment
+console.log('5 in range?', rangeTo(1, 10).contains(5));
+console.log('15 in range?', rangeTo(1, 10).contains(15));`}
+            language="typescript"
+            executable={true}
+          />
         </DocsSection>
 
         <DocsSection

@@ -744,6 +744,31 @@ async function saveUserPreferences(userId: string, preferences: Preferences) {
 
           <h3 className="text-lg font-semibold text-white mt-6 mb-3">Advanced Patterns</h3>
           <CodeBlock code={optionAdvancedExample} language="typescript" />
+
+          <h4 className="text-lg font-semibold text-foreground mt-6 mb-3">Try it yourself:</h4>
+          <CodeBlock
+            code={`// Working with Option monad
+const maybeToken = fromNullable(null);
+console.log('Empty option:', maybeToken.getOrElse('default-token'));
+
+const user = Some({ name: 'Alice', age: 30 });
+const greeting = user
+  .map(u => \`Hello, \${u.name}!\`)
+  .getOrElse('Hello, stranger!');
+
+console.log(greeting);
+
+// Chain transformations
+const result = Some(10)
+  .map(x => x * 2)
+  .filter(x => x > 15)
+  .map(x => \`Value: \${x}\`)
+  .getOrElse('Too small');
+
+console.log(result);`}
+            language="typescript"
+            executable={true}
+          />
         </DocsSection>
 
         <DocsSection

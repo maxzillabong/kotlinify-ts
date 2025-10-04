@@ -167,30 +167,30 @@ Sequence.from(new Set([1, 2, 3]))
           description="Create infinite sequences that are evaluated lazily - perfect for generating data on-demand."
         >
           <CodeBlock
-            code={`import { generateSequence, Sequence } from 'kotlinify-ts/sequences';
-
-// Finite sequence with termination condition
-generateSequence(1, x => x < 100 ? x * 2 : null)
-  .toArray(); // [1, 2, 4, 8, 16, 32, 64]
+            code={`import { generateSequence, sequenceOf } from 'kotlinify-ts/sequences';
 
 // Fibonacci sequence
-generateSequence([0, 1], ([a, b]) => [b, a + b])
+const fibonacci = generateSequence([0, 1], ([a, b]) => [b, a + b])
   .map(([a]) => a)
   .take(10)
-  .toArray(); // [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+  .toArray();
 
-// Infinite counter
-let counter = 0;
-Sequence.generate(() => counter++)
-  .take(5)
-  .toArray(); // [0, 1, 2, 3, 4]
+console.log('Fibonacci:', fibonacci);
 
-// Random number generator
-Sequence.generate(() => Math.random())
-  .filter(x => x > 0.9)
-  .take(3)
-  .toArray(); // [0.92..., 0.95..., 0.91...]`}
+// Powers of 2 up to 100
+const powersOf2 = generateSequence(1, x => x < 100 ? x * 2 : null)
+  .toArray();
+
+console.log('Powers of 2:', powersOf2);
+
+// Simple counter
+const numbers = sequenceOf(1, 2, 3, 4, 5)
+  .map(x => x * x)
+  .toArray();
+
+console.log('Squares:', numbers);`}
             language="typescript"
+            executable={true}
           />
         </DocsSection>
 

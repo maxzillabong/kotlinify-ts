@@ -532,6 +532,35 @@ const analysis = Array.from(groupBy(users, u => u.role))
           description="Transform arrays into maps, grouped collections, and partitioned arrays."
         >
           <CodeBlock code={transformationsExample} language="typescript" />
+
+          <h4 className="text-lg font-semibold text-foreground mt-6 mb-3">Try it yourself:</h4>
+          <CodeBlock
+            code={`// Group by and transform
+const transactions = [
+  { id: 1, category: 'food', amount: 50 },
+  { id: 2, category: 'transport', amount: 30 },
+  { id: 3, category: 'food', amount: 75 },
+  { id: 4, category: 'transport', amount: 20 }
+];
+
+const byCategory = groupBy(transactions, t => t.category);
+
+console.log('Groups:', Array.from(byCategory.keys()));
+
+for (const [category, items] of byCategory) {
+  const total = items.reduce((sum, t) => sum + t.amount, 0);
+  console.log(\`\${category}: $\${total}\`);
+}
+
+// Zip arrays together
+const names = ['Alice', 'Bob', 'Charlie'];
+const scores = [95, 87, 92];
+const results = zip(names, scores);
+
+console.log('Results:', results);`}
+            language="typescript"
+            executable={true}
+          />
         </DocsSection>
 
         <DocsSection
