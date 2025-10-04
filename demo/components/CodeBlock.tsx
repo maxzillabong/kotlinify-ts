@@ -132,7 +132,7 @@ export function CodeBlock({ code, language = "typescript", showLineNumbers = fal
         const { asScope } = K;
         const { flowOf, flow } = K;
         const { Result, Option, fromNullable, Success, Failure, tryCatch, Some, None } = K;
-        const { coroutineScope, launch, delay, withTimeout } = K;
+        const { coroutineScope, launch, async, asyncValue, delay, withTimeout } = K;
         const { groupBy, associateBy, chunked, windowed, zip, slice } = K;
         const { trimIndent, trimMargin, lines } = K;
         const { rangeTo, until, downTo, IntRange } = K;
