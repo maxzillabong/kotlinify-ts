@@ -1,6 +1,6 @@
 {
   "name": "kotlinify-ts",
-  "version": "0.2.2",
+  "version": "1.0.0",
   "description": "Bring Kotlin's beloved utility functions and patterns to TypeScript",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
