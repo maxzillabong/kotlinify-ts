@@ -218,14 +218,43 @@ export function chunked<T, R>(
   size: number,
   transform: (chunk: readonly T[]) => R
 ): R[]
+export function chunked<T>(
+  array: readonly T[],
+  size: number,
+  step: number,
+  partialWindows?: boolean
+): T[][]
 export function chunked<T, R>(
   array: readonly T[],
   size: number,
+  step: number,
+  partialWindows: boolean,
+  transform: (chunk: readonly T[]) => R
+): R[]
+export function chunked<T, R>(
+  array: readonly T[],
+  size: number,
+  stepOrTransform?: number | ((chunk: readonly T[]) => R),
+  partialWindows?: boolean,
   transform?: (chunk: readonly T[]) => R
 ): T[][] | R[] {
+  if (typeof stepOrTransform === 'function') {
+    const chunks: T[][] = []
+    for (let i = 0; i < array.length; i += size) {
+      chunks.push(array.slice(i, i + size))
+    }
+    return chunks.map(stepOrTransform)
+  }
+
+  const step = stepOrTransform ?? size
+  const partial = partialWindows ?? false
   const chunks: T[][] = []
-  for (let i = 0; i < array.length; i += size) {
-    chunks.push(array.slice(i, i + size))
+
+  for (let i = 0; i < array.length; i += step) {
+    const chunk = array.slice(i, i + size)
+    if (partial || chunk.length === size) {
+      chunks.push(chunk)
+    }
   }
   return transform ? chunks.map(transform) : chunks
 }

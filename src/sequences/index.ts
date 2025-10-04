@@ -212,7 +212,11 @@ export class Sequence<T> {
     const source = this.iterator
     return new Sequence(function* () {
       const items = Array.from({ [Symbol.iterator]: source })
-      items.sort(compareFn)
+      items.sort(compareFn || ((a, b) => {
+        if (a < b) return -1
+        if (a > b) return 1
+        return 0
+      }))
       yield* items
     })
   }
@@ -464,8 +468,24 @@ export class Sequence<T> {
     return count
   }
 
-  reduce<U>(operation: (acc: U, value: T) => U, initial: U): U {
-    let accumulator = initial
+  reduce(operation: (acc: T, value: T) => T): T
+  reduce<U>(operation: (acc: U, value: T) => U, initial: U): U
+  reduce<U>(operation: (acc: T | U, value: T) => T | U, initial?: U): T | U {
+    const iterator = this[Symbol.iterator]()
+
+    if (initial === undefined) {
+      const first = iterator.next()
+      if (first.done) {
+        throw new Error('Sequence is empty')
+      }
+      let accumulator: T | U = first.value
+      for (const item of { [Symbol.iterator]: () => iterator }) {
+        accumulator = operation(accumulator, item)
+      }
+      return accumulator
+    }
+
+    let accumulator: T | U = initial
     for (const item of this) {
       accumulator = operation(accumulator, item)
     }

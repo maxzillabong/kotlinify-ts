@@ -57,9 +57,10 @@ export class Flow<T> {
           }
         })
       } catch (error) {
-        if (!(error instanceof CancellationError)) {
-          throw error
+        if (error instanceof CancellationError && error.message === 'FLOW_TAKE_COMPLETED') {
+          return
         }
+        throw error
       }
     })
   }
