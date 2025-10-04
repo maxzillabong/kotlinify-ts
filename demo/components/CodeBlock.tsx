@@ -126,15 +126,15 @@ export function CodeBlock({ code, language = "typescript", showLineNumbers = fal
     try {
       const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
       const executableCode = `
-        const sequences = await import('kotlinify-ts/sequences');
-        const scope = await import('kotlinify-ts/scope');
-        const flow = await import('kotlinify-ts/flow');
-        const monads = await import('kotlinify-ts/monads');
-        const coroutines = await import('kotlinify-ts/coroutines');
-        const collections = await import('kotlinify-ts/collections');
-        const strings = await import('kotlinify-ts/strings');
-        const ranges = await import('kotlinify-ts/ranges');
-        const duration = await import('kotlinify-ts/duration');
+        const sequences = await import('kotlinify/sequences');
+        const scope = await import('kotlinify/scope');
+        const flow = await import('kotlinify/flow');
+        const monads = await import('kotlinify/monads');
+        const coroutines = await import('kotlinify/coroutines');
+        const collections = await import('kotlinify/collections');
+        const strings = await import('kotlinify/strings');
+        const ranges = await import('kotlinify/ranges');
+        const duration = await import('kotlinify/duration');
 
         const { asSequence, sequenceOf, generateSequence, Sequence } = sequences;
         const { asScope } = scope;
