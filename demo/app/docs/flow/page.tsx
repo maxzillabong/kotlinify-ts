@@ -215,8 +215,9 @@ await flowOf(1, 2, 3, 4, 5)
 
 // Distinct and debouncing
 await userInputFlow()
-  .debounce(300)                      // Wait 300ms of inactivity
+  .debounce(300)                      // Wait 300ms of silence before emitting
   .distinctUntilChanged()              // Skip consecutive duplicates
+  .retryWhen((error, attempt) => attempt < 3) // Resilient retries
   .map(query => searchAPI(query))
   .collect(results => displayResults(results));
 
@@ -288,7 +289,7 @@ await flowOf('kotlin', 'typescript', 'rust')
 
 // flatMapLatest: Cancel previous on new emission
 await userInputFlow()
-  .debounce(300)
+  .debounce(300) // Wait for idle input before switching requests
   .flatMapLatest(query => searchFlow(query))
   .collect(displayResults); // Cancels previous search on new input`}
             language="typescript"
@@ -626,7 +627,7 @@ await pollAPI()
 const searchInput = new MutableStateFlow('');
 
 searchInput
-  .debounce(300)
+  .debounce(300) // Wait for typing to pause
   .filter(query => query.length > 2)
   .distinctUntilChanged()
   .flatMapLatest(query =>

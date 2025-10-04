@@ -136,36 +136,64 @@ export function singleOrNull<T>(array: T[], predicate?: (value: T) => boolean): 
   return array.length === 1 ? array[0] : undefined
 }
 
-export function associateBy<T, K extends string | number | symbol>(
-  array: T[],
+export function associateBy<T, K>(
+  array: readonly T[],
   keySelector: (value: T) => K
-): Record<K, T> {
-  return array.reduce((acc, item) => {
-    acc[keySelector(item)] = item
-    return acc
-  }, {} as Record<K, T>)
+): Map<K, T>
+export function associateBy<T, K, V>(
+  array: readonly T[],
+  keySelector: (value: T) => K,
+  valueTransform: (value: T) => V
+): Map<K, V>
+export function associateBy<T, K, V>(
+  array: readonly T[],
+  keySelector: (value: T) => K,
+  valueTransform?: (value: T) => V
+): Map<K, T | V> {
+  const map = new Map<K, T | V>()
+  for (const item of array) {
+    const key = keySelector(item)
+    const value = valueTransform ? valueTransform(item) : item
+    map.set(key, value)
+  }
+  return map
 }
 
 export function associateWith<T, V>(
-  array: T[],
+  array: readonly T[],
   valueSelector: (value: T) => V
-): Record<string, V> {
-  return array.reduce((acc, item) => {
-    acc[String(item)] = valueSelector(item)
-    return acc
-  }, {} as Record<string, V>)
+): Map<T, V> {
+  const map = new Map<T, V>()
+  for (const item of array) {
+    map.set(item, valueSelector(item))
+  }
+  return map
 }
 
-export function groupBy<T, K extends string | number | symbol>(
-  array: T[],
+export function groupBy<T, K>(
+  array: readonly T[],
   keySelector: (value: T) => K
-): Record<K, T[]> {
-  return array.reduce((acc, item) => {
+): Map<K, T[]>
+export function groupBy<T, K, V>(
+  array: readonly T[],
+  keySelector: (value: T) => K,
+  valueTransform: (value: T) => V
+): Map<K, V[]>
+export function groupBy<T, K, V>(
+  array: readonly T[],
+  keySelector: (value: T) => K,
+  valueTransform?: (value: T) => V
+): Map<K, (T | V)[]> {
+  const map = new Map<K, (T | V)[]>()
+  for (const item of array) {
     const key = keySelector(item)
-    if (!acc[key]) acc[key] = []
-    acc[key].push(item)
-    return acc
-  }, {} as Record<K, T[]>)
+    const value = valueTransform ? valueTransform(item) : item
+    if (!map.has(key)) {
+      map.set(key, [])
+    }
+    map.get(key)!.push(value)
+  }
+  return map
 }
 
 export function partition<T>(
@@ -184,56 +212,122 @@ export function partition<T>(
   return [matched, notMatched]
 }
 
-export function chunked<T>(array: T[], size: number): T[][] {
+export function chunked<T>(array: readonly T[], size: number): T[][]
+export function chunked<T, R>(
+  array: readonly T[],
+  size: number,
+  transform: (chunk: readonly T[]) => R
+): R[]
+export function chunked<T, R>(
+  array: readonly T[],
+  size: number,
+  transform?: (chunk: readonly T[]) => R
+): T[][] | R[] {
   const chunks: T[][] = []
   for (let i = 0; i < array.length; i += size) {
     chunks.push(array.slice(i, i + size))
   }
-  return chunks
+  return transform ? chunks.map(transform) : chunks
 }
 
-export function windowed<T>(array: T[], size: number, step: number = 1): T[][] {
+export function windowed<T>(
+  array: readonly T[],
+  size: number,
+  step?: number,
+  partialWindows?: boolean
+): T[][]
+export function windowed<T, R>(
+  array: readonly T[],
+  size: number,
+  step: number,
+  partialWindows: boolean,
+  transform: (window: readonly T[]) => R
+): R[]
+export function windowed<T, R>(
+  array: readonly T[],
+  size: number,
+  step: number = size,
+  partialWindows: boolean = false,
+  transform?: (window: readonly T[]) => R
+): T[][] | R[] {
   const windows: T[][] = []
-  for (let i = 0; i <= array.length - size; i += step) {
-    windows.push(array.slice(i, i + size))
+  const limit = partialWindows ? array.length : array.length - size + 1
+  for (let i = 0; i < limit; i += step) {
+    const window = array.slice(i, i + size)
+    if (partialWindows || window.length === size) {
+      windows.push(window)
+    }
   }
-  return windows
+  return transform ? windows.map(transform) : windows
 }
 
-export function zipWithNext<T>(array: T[]): [T, T][] {
-  const pairs: [T, T][] = []
+export function zipWithNext<T>(array: readonly T[]): [T, T][]
+export function zipWithNext<T, R>(
+  array: readonly T[],
+  transform: (a: T, b: T) => R
+): R[]
+export function zipWithNext<T, R>(
+  array: readonly T[],
+  transform?: (a: T, b: T) => R
+): [T, T][] | R[] {
+  const result: ([T, T] | R)[] = []
   for (let i = 0; i < array.length - 1; i++) {
-    pairs.push([array[i], array[i + 1]])
+    const pair: [T, T] = [array[i], array[i + 1]]
+    result.push(transform ? transform(pair[0], pair[1]) : pair)
   }
-  return pairs
+  return result as [T, T][] | R[]
 }
 
-export function distinctBy<T, K>(array: T[], selector: (value: T) => K): T[] {
+export function distinctBy<T, K>(array: Iterable<T>, selector: (value: T) => K): T[] {
   const seen = new Set<K>()
-  return array.filter((item) => {
+  const result: T[] = []
+  for (const item of array) {
     const key = selector(item)
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+    if (!seen.has(key)) {
+      seen.add(key)
+      result.push(item)
+    }
+  }
+  return result
 }
 
-export function union<T>(array1: T[], array2: T[]): T[] {
-  return Array.from(new Set([...array1, ...array2]))
+export function union<T>(array1: Iterable<T>, array2: Iterable<T>): T[] {
+  const result = new Set<T>()
+  for (const item of array1) result.add(item)
+  for (const item of array2) result.add(item)
+  return Array.from(result)
 }
 
-export function intersect<T>(array1: T[], array2: T[]): T[] {
+export function intersect<T>(array1: Iterable<T>, array2: Iterable<T>): T[] {
+  const set1 = new Set<T>()
   const set2 = new Set(array2)
-  return Array.from(new Set(array1.filter((item) => set2.has(item))))
+  const result: T[] = []
+  for (const item of array1) {
+    if (set2.has(item) && !set1.has(item)) {
+      set1.add(item)
+      result.push(item)
+    }
+  }
+  return result
 }
 
-export function subtract<T>(array1: T[], array2: T[]): T[] {
+export function subtract<T>(array1: Iterable<T>, array2: Iterable<T>): T[] {
   const set2 = new Set(array2)
-  return array1.filter((item) => !set2.has(item))
+  const result: T[] = []
+  for (const item of array1) {
+    if (!set2.has(item)) {
+      result.push(item)
+    }
+  }
+  return result
 }
 
-export function sumOf<T>(array: T[], selector: (value: T) => number): number {
-  return array.reduce((sum, item) => sum + selector(item), 0)
+export function sumOf<T>(array: Iterable<T>, selector: (value: T) => number): number {
+  let sum = 0
+  for (const item of array) {
+    sum += selector(item)
+  }
+  return sum
 }
 
 export function maxBy<T>(array: T[], selector: (value: T) => number): T | undefined {
@@ -298,11 +392,46 @@ export function dropLastWhile<T>(array: readonly T[], predicate: (value: T) => b
   return []
 }
 
-export function slice<T>(array: readonly T[], indices: number[] | Iterable<number>): T[] {
-  return Array.from(indices, i => array[i]).filter(item => item !== undefined)
+export interface Range {
+  start: number
+  endInclusive: number
+  step?: number
 }
 
-export function distinct<T>(array: readonly T[]): T[] {
+export function slice<T>(array: readonly T[], indices: Iterable<number> | Range): T[] {
+  if ('start' in indices && 'endInclusive' in indices) {
+    const { start, endInclusive, step = 1 } = indices
+    if (start < 0 || start >= array.length) {
+      throw new RangeError(`Start index ${start} is out of bounds for array of length ${array.length}`)
+    }
+    if (endInclusive < 0 || endInclusive >= array.length) {
+      throw new RangeError(`End index ${endInclusive} is out of bounds for array of length ${array.length}`)
+    }
+
+    const result: T[] = []
+    if (step > 0) {
+      for (let i = start; i <= endInclusive; i += step) {
+        result.push(array[i])
+      }
+    } else if (step < 0) {
+      for (let i = start; i >= endInclusive; i += step) {
+        result.push(array[i])
+      }
+    }
+    return result
+  }
+
+  const result: T[] = []
+  for (const i of indices) {
+    if (i < 0 || i >= array.length) {
+      throw new RangeError(`Index ${i} is out of bounds for array of length ${array.length}`)
+    }
+    result.push(array[i])
+  }
+  return result
+}
+
+export function distinct<T>(array: Iterable<T>): T[] {
   return Array.from(new Set(array))
 }
 

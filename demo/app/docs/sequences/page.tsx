@@ -207,11 +207,35 @@ asSequence([1, 2, 3, 4, 5])
   .filter(x => x > 5)
   .toArray(); // [6, 8, 10]
 
+// Indexed transformations
+asSequence(['a', 'b', 'c'])
+  .mapIndexed((index, value) => \`\${index}: \${value}\`)
+  .toArray(); // ['0: a', '1: b', '2: c']
+
+asSequence([10, 20, 30, 40])
+  .filterIndexed((index, value) => index % 2 === 0)
+  .toArray(); // [10, 30]
+
+// Null-aware mapping
+asSequence([1, null, 2, undefined, 3])
+  .mapNotNull(x => x ? x * 2 : null)
+  .toArray(); // [2, 4, 6]
+
+// Inverted filter
+asSequence([1, 2, 3, 4, 5])
+  .filterNot(x => x % 2 === 0)
+  .toArray(); // [1, 3, 5]
+
 // FlatMap - flattening sequences
 asSequence(['hello', 'world'])
   .flatMap(word => word.split(''))
   .distinct()
   .toArray(); // ['h', 'e', 'l', 'o', 'w', 'r', 'd']
+
+// Flatten nested sequences
+asSequence([[1, 2], [3, 4], [5]])
+  .flatten()
+  .toArray(); // [1, 2, 3, 4, 5]
 
 // Take and drop operations
 asSequence([1, 2, 3, 4, 5])
@@ -286,11 +310,10 @@ asSequence([1, 2, 3, 4, 5, 6, 7])
   .chunked(3)
   .toArray(); // [[1, 2, 3], [4, 5, 6], [7]]
 
-// Process chunks
+// Transform chunks directly
 asSequence([1, 2, 3, 4, 5, 6])
-  .chunked(2)
-  .map(chunk => chunk.reduce((a, b) => a + b, 0))
-  .toArray(); // [3, 7, 11] (sums of each pair)
+  .chunked(2, chunk => chunk.reduce((a, b) => a + b, 0))
+  .toArray(); // [3, 7, 11]
 
 // Sliding windows
 asSequence([1, 2, 3, 4, 5])
@@ -307,10 +330,11 @@ asSequence([1, 2, 3, 4, 5])
   .windowed(3, 3, true)
   .toArray(); // [[1, 2, 3], [4, 5]]
 
-// Moving average example
+// Transform windows directly (moving average)
 asSequence([10, 20, 30, 40, 50, 60])
-  .windowed(3)
-  .map(window => window.reduce((a, b) => a + b) / window.length)
+  .windowed(3, 1, false, window =>
+    window.reduce((a, b) => a + b) / window.length
+  )
   .toArray(); // [20, 30, 40, 50]`}
             language="typescript"
           />
@@ -328,10 +352,9 @@ sequenceOf(1, 2, 3, 4)
   .zipWithNext()
   .toArray(); // [[1, 2], [2, 3], [3, 4]]
 
-// Calculate differences between consecutive elements
+// Transform pairs directly
 sequenceOf(10, 15, 12, 18, 20)
-  .zipWithNext()
-  .map(([prev, curr]) => curr - prev)
+  .zipWithNext((prev, curr) => curr - prev)
   .toArray(); // [5, -3, 6, 2]
 
 // Zip two sequences together
@@ -364,6 +387,20 @@ sequenceOf(1, 2, 3, 4).first(); // 1
 sequenceOf(1, 2, 3, 4).last(); // 4
 sequenceOf(1, 2, 3, 4).find(x => x > 2); // 3
 
+// Single element (throws if not exactly one)
+sequenceOf(42).single(); // 42
+sequenceOf(1, 2).single(); // throws Error
+sequenceOf().single(); // throws Error
+
+// Safe single (returns null if not exactly one)
+sequenceOf(42).singleOrNull(); // 42
+sequenceOf(1, 2).singleOrNull(); // null
+sequenceOf().singleOrNull(); // null
+
+// With predicates
+sequenceOf(1, 2, 3, 4).single(x => x > 3); // 4
+sequenceOf(1, 2, 3, 4).singleOrNull(x => x > 10); // null
+
 // Safe versions return null instead of throwing
 sequenceOf().firstOrNull(); // null
 sequenceOf().lastOrNull(); // null
@@ -392,6 +429,16 @@ sequenceOf(1, 2, 3, 4)
 sequenceOf(1, 2, 3, 4)
   .fold(10, (acc, x) => acc + x); // 20 (starts with 10)
 
+// Running fold - yields intermediate results
+sequenceOf(1, 2, 3, 4)
+  .runningFold(0, (acc, x) => acc + x)
+  .toArray(); // [0, 1, 3, 6, 10]
+
+// Scan is an alias for runningFold
+sequenceOf(1, 2, 3, 4)
+  .scan(0, (acc, x) => acc + x)
+  .toArray(); // [0, 1, 3, 6, 10]
+
 // Math operations
 sequenceOf(1, 2, 3, 4).sum(); // 10
 sequenceOf(1, 2, 3, 4).average(); // 2.5
@@ -403,6 +450,14 @@ sequenceOf(
   { name: 'Charlie', score: 95 }
 )
   .sumBy(student => student.score); // 270
+
+// sumOf is Kotlin-standard alias for sumBy
+sequenceOf(
+  { name: 'Alice', score: 90 },
+  { name: 'Bob', score: 85 },
+  { name: 'Charlie', score: 95 }
+)
+  .sumOf(student => student.score); // 270
 
 sequenceOf(
   { product: 'A', price: 10 },
@@ -436,13 +491,18 @@ sequenceOf(
           <CodeBlock
             code={`import { sequenceOf } from 'kotlinify-ts/sequences';
 
-// Group by key
-sequenceOf(1, 2, 3, 4, 5, 6)
+// Group by key - returns Map
+const groups = sequenceOf(1, 2, 3, 4, 5, 6)
   .groupBy(x => x % 2 === 0 ? 'even' : 'odd');
 // Map { 'odd' => [1, 3, 5], 'even' => [2, 4, 6] }
 
+// Iterate over grouped results
+for (const [key, values] of groups) {
+  console.log(\`\${key}: \${values.length} items\`);
+}
+
 // Group objects by property
-sequenceOf(
+const byDept = sequenceOf(
   { name: 'Alice', dept: 'Engineering' },
   { name: 'Bob', dept: 'Sales' },
   { name: 'Charlie', dept: 'Engineering' },
@@ -451,12 +511,14 @@ sequenceOf(
   .groupBy(person => person.dept);
 // Map { 'Engineering' => [...], 'Sales' => [...] }
 
+byDept.get('Engineering'); // [{ name: 'Alice', ... }, { name: 'Charlie', ... }]
+
 // Partition into two arrays
 const [evens, odds] = sequenceOf(1, 2, 3, 4, 5)
   .partition(x => x % 2 === 0);
 // evens: [2, 4], odds: [1, 3, 5]
 
-// Associate operations
+// Associate operations - return Map
 sequenceOf(1, 2, 3)
   .associateWith(x => x * 10);
 // Map { 1 => 10, 2 => 20, 3 => 30 }

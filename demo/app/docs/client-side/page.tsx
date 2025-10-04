@@ -127,7 +127,7 @@ inputElement.addEventListener('input', e => {
 });
 
 inputFlow
-  .debounce(300)
+  .debounce(300) // Wait for typing to pause
   .map(value => validateInput(value))
   .collect(result =>
     result.fold(
@@ -153,7 +153,7 @@ document.addEventListener("click", e => clicks$.emit(e));
 clicks$
   .filter(e => e.target.matches("button.action"))
   .map(e => ({ action: e.target.dataset.action, target: e.target }))
-  .debounce(200)
+  .debounce(200) // Grace period before triggering action
   .collect(({ action, target }) => {
     target.classList.add('processing');
     handleAction(action).finally(() =>

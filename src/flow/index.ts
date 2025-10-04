@@ -115,21 +115,66 @@ export class Flow<T> {
 
   debounce(timeoutMs: number): Flow<T> {
     return new Flow(async (collector) => {
-      let lastValue: T | undefined
-      let hasValue = false
+      let timer: ReturnType<typeof setTimeout> | null = null
+      let pending: Promise<void> | null = null
+      let resolvePending: (() => void) | null = null
+      let rejectPending: ((error: unknown) => void) | null = null
+      let latestValue: T | undefined
 
-      await this.collect(async (value) => {
-        lastValue = value
-        hasValue = true
-      })
+      const clearTimer = (error?: unknown) => {
+        if (timer) {
+          clearTimeout(timer)
+          timer = null
+        }
+        if (pending) {
+          const resolve = resolvePending
+          const reject = rejectPending
+          resolvePending = null
+          rejectPending = null
+          pending = null
+          if (error === undefined) {
+            resolve?.()
+          } else {
+            reject?.(error)
+          }
+        }
+      }
 
-      if (hasValue && lastValue !== undefined) {
-        await new Promise<void>((resolve) => {
-          setTimeout(async () => {
-            await collector.emit(lastValue!)
-            resolve()
-          }, timeoutMs)
+      const scheduleEmit = () => {
+        clearTimer()
+        pending = new Promise<void>((resolve, reject) => {
+          resolvePending = resolve
+          rejectPending = reject
         })
+        timer = setTimeout(async () => {
+          const value = latestValue as T
+          const resolve = resolvePending
+          const reject = rejectPending
+          timer = null
+          pending = null
+          resolvePending = null
+          rejectPending = null
+          try {
+            await collector.emit(value)
+            resolve?.()
+          } catch (error) {
+            reject?.(error)
+          }
+        }, timeoutMs)
+      }
+
+      try {
+        await this.collect(async (value) => {
+          latestValue = value
+          scheduleEmit()
+        })
+      } catch (error) {
+        clearTimer(error)
+        throw error
+      }
+
+      if (pending) {
+        await pending
       }
     })
   }
@@ -178,14 +223,50 @@ export class Flow<T> {
 
   flatMapLatest<R>(transform: (value: T) => Flow<R>): Flow<R> {
     return new Flow(async (collector) => {
-      let currentJob: Job | null = null
-      await this.collect(async (value) => {
+      let currentJob: Job | undefined
+      let currentTask: Promise<void> | null = null
+
+      const launchLatest = (value: T) => {
         currentJob?.cancel()
-        currentJob = new Job()
-        await transform(value).collectWithJob(currentJob, async (v) => {
-          await collector.emit(v)
+        const job = new Job()
+        currentJob = job
+        const task = transform(value)
+          .collectWithJob(job, async (v) => {
+            job.ensureActive()
+            await collector.emit(v)
+          })
+        currentTask = task.catch((error) => {
+          if (error instanceof CancellationError) {
+            return
+          }
+          throw error
         })
-      })
+      }
+
+      try {
+        await this.collect(async (value) => {
+          launchLatest(value)
+        })
+        if (currentTask) {
+          await currentTask
+        }
+      } catch (error) {
+        const job = currentJob
+        if (job) {
+          job.cancel()
+          currentJob = undefined
+        }
+        if (currentTask) {
+          try {
+            await currentTask
+          } catch (innerError) {
+            if (!(innerError instanceof CancellationError)) {
+              throw innerError
+            }
+          }
+        }
+        throw error
+      }
     })
   }
 
@@ -345,13 +426,19 @@ export class Flow<T> {
   retry(retries: number = 3): Flow<T> {
     return new Flow(async (collector) => {
       let attempts = 0
-      while (attempts <= retries) {
+      while (true) {
         try {
-          await this.block(collector)
+          await this.collect(async (value) => {
+            await collector.emit(value)
+          })
           return
         } catch (error) {
-          attempts++
-          if (attempts > retries) throw error
+          if (error instanceof CancellationError) {
+            throw error
+          }
+          if (attempts++ >= retries) {
+            throw error
+          }
         }
       }
     })
@@ -362,11 +449,18 @@ export class Flow<T> {
       let attempt = 0
       while (true) {
         try {
-          await this.block(collector)
+          await this.collect(async (value) => {
+            await collector.emit(value)
+          })
           return
         } catch (error) {
+          if (error instanceof CancellationError) {
+            throw error
+          }
           const shouldRetry = await predicate(error as Error, attempt++)
-          if (!shouldRetry) throw error
+          if (!shouldRetry) {
+            throw error
+          }
         }
       }
     })
@@ -508,32 +602,52 @@ export class Flow<T> {
   }
 
   async any(predicate?: (value: T) => boolean | Promise<boolean>): Promise<boolean> {
+    const stop = Symbol('FLOW_ANY_STOP')
     if (!predicate) {
       try {
-        await this.first()
-        return true
-      } catch {
+        await this.collect(async () => {
+          throw stop
+        })
         return false
+      } catch (error) {
+        if (error === stop) {
+          return true
+        }
+        throw error
       }
     }
+
     let result = false
-    await this.collect(async (value) => {
-      if (await predicate(value)) {
-        result = true
-        throw new Error('STOP')
+    try {
+      await this.collect(async (value) => {
+        if (await predicate(value)) {
+          result = true
+          throw stop
+        }
+      })
+    } catch (error) {
+      if (error !== stop) {
+        throw error
       }
-    }).catch(() => {})
+    }
     return result
   }
 
   async all(predicate: (value: T) => boolean | Promise<boolean>): Promise<boolean> {
+    const stop = Symbol('FLOW_ALL_STOP')
     let result = true
-    await this.collect(async (value) => {
-      if (!(await predicate(value))) {
-        result = false
-        throw new Error('STOP')
+    try {
+      await this.collect(async (value) => {
+        if (!(await predicate(value))) {
+          result = false
+          throw stop
+        }
+      })
+    } catch (error) {
+      if (error !== stop) {
+        throw error
       }
-    }).catch(() => {})
+    }
     return result
   }
 
@@ -543,13 +657,45 @@ export class Flow<T> {
 
   shareIn(config?: SharedFlowConfig): MutableSharedFlow<T> {
     const sharedFlow = new MutableSharedFlow<T>(config)
-    this.collect((value) => sharedFlow.emit(value)).catch(() => {})
+    ;(async () => {
+      try {
+        await this.collect(async (value) => {
+          await sharedFlow.emit(value)
+        })
+      } catch (error) {
+        if (!(error instanceof CancellationError)) {
+          sharedFlow.cancelAll()
+        }
+        throw error
+      }
+    })().catch((error) => {
+      if (error instanceof CancellationError) {
+        return
+      }
+      sharedFlow.cancelAll()
+    })
     return sharedFlow
   }
 
   stateIn(initialValue: T): MutableStateFlow<T> {
     const stateFlow = new MutableStateFlow<T>(initialValue)
-    this.collect((value) => stateFlow.emit(value)).catch(() => {})
+    ;(async () => {
+      try {
+        await this.collect(async (value) => {
+          await stateFlow.emit(value)
+        })
+      } catch (error) {
+        if (!(error instanceof CancellationError)) {
+          stateFlow.cancelAll()
+        }
+        throw error
+      }
+    })().catch((error) => {
+      if (error instanceof CancellationError) {
+        return
+      }
+      stateFlow.cancelAll()
+    })
     return stateFlow
   }
 }

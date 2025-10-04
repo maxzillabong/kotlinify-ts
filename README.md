@@ -136,8 +136,9 @@ const messageFlow = flow(async (emit) => {
 })
   .filter(msg => msg.type === 'data')
   .map(msg => msg.payload)
-  .debounce(100)
+  .debounce(100)                         // Wait for 100ms of silence before delivering
   .distinctUntilChanged()
+  .retryWhen((error, attempt) => attempt < 3) // Retry failures up to 3 times
   .onEach(data => updateUI(data))
   .catch(err => console.error('Stream error:', err));
 
@@ -214,39 +215,41 @@ const config = fromNullable(process.env.CONFIG)
 Transform data with powerful, chainable operations:
 
 ```typescript
-import { asSequence, zip } from 'kotlinify-ts';
+import { groupBy, associateBy, chunked, windowed, zip, slice } from 'kotlinify-ts';
 
-// Group and analyze
-const stats = asSequence(transactions)
-  .groupBy(t => t.category)
-  .mapValues(txns => ({
-    total: txns.sumOf(t => t.amount),
-    average: txns.average(t => t.amount),
-    count: txns.length
-  }))
-  .toMap();
+// Group and analyze - returns Map for type safety
+const stats = groupBy(transactions, t => t.category, t => t.amount);
+for (const [category, amounts] of stats) {
+  console.log(`${category}: ${amounts.reduce((a, b) => a + b, 0)}`);
+}
 
-// Process in batches
-const batches = asSequence(records)
-  .chunked(100)
-  .map(batch => processBatch(batch))
-  .toArray();
+// Associate by key with transform
+const userMap = associateBy(
+  users,
+  u => u.id,
+  u => u.profile
+);
+const profile = userMap.get(123); // Type-safe Map access
+
+// Process in batches with transform
+const results = chunked(records, 100, batch => processBatch(batch));
 
 // Sliding windows for time-series
-const movingAverage = asSequence(prices)
-  .windowed(5, 1)
-  .map(window => window.average())
-  .toArray();
+const movingAverage = windowed(
+  prices,
+  5,           // window size
+  1,           // step
+  false,       // no partial windows
+  window => window.reduce((a, b) => a + b, 0) / window.length
+);
+
+// Slice with ranges
+const subset = slice(data, { start: 10, endInclusive: 20, step: 2 });
 
 // Combine multiple sources
-const combined = zip(
-  userIds,
-  profiles,
-  preferences
-).map(([id, profile, prefs]) => ({
+const combined = zip(userIds, profiles).map(([id, profile]) => ({
   id,
-  ...profile,
-  settings: prefs
+  ...profile
 }));
 ```
 

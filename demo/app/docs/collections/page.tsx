@@ -103,29 +103,31 @@ const userMap = associate(users, user => [user.id, user]);
 const total = fold(items, 0, (sum, item) => sum + item.price);
 const htmlList = fold(tags, '<ul>', (html, tag) => html + \`<li>\${tag}</li>\`) + '</ul>';
 
-// Associate by key - create lookup map
+// Associate by key - returns Map for type safety
 const userLookup = associateBy(users, user => user.id);
-const emailIndex = associateBy(contacts, contact => contact.email);
+const user = userLookup.get(123); // Type-safe Map access
 
-// Associate with value - transform values
+// Associate by key with value transform
+const emailToName = associateBy(contacts, c => c.email, c => c.name);
+const name = emailToName.get('user@example.com');
+
+// Associate with value - transform values into Map
 const permissions = associateWith(roles, role => getPermissionsForRole(role));
+const adminPerms = permissions.get('admin');
 
-// Group by key - create grouped map
+// Group by key - returns Map<K, T[]>
 const usersByRole = groupBy(users, user => user.role);
-const ordersByStatus = groupBy(orders, order => order.status);
+for (const [role, users] of usersByRole) {
+  console.log(\`\${role}: \${users.length} users\`);
+}
+
+// Group with value transform
+const amountsByCategory = groupBy(transactions, t => t.category, t => t.amount);
+const foodTotal = amountsByCategory.get('food')?.reduce((a, b) => a + b, 0);
 
 // Partition - split into two arrays
 const [active, inactive] = partition(users, user => user.lastLogin > thirtyDaysAgo);
-const [valid, invalid] = partition(data, item => validateItem(item));
-
-// With prototype extensions
-const flattened = nestedData
-  .flatMap(group => group.items)
-  .distinct();
-
-const paired = ids
-  .zip(values)
-  .associate(([id, value]) => [id, processValue(value)]);`;
+const [valid, invalid] = partition(data, item => validateItem(item));`;
 
   const reduceOperationsExample = `import { reduce, reduceRight, foldRight, runningFold, runningReduce } from 'kotlinify-ts/collections';
 
@@ -161,22 +163,17 @@ const growth = dailyRevenue
 const selected = slice(items, [0, 2, 4, 6]); // Every other element
 const samples = slice(data, randomIndices);
 
-// Remove duplicates
+// Slice with Range support
+const range = slice(data, { start: 10, endInclusive: 20 }); // indices 10 through 20
+const stepped = slice(data, { start: 0, endInclusive: 100, step: 10 }); // every 10th
+
+// Remove duplicates - works with iterables
 const unique = distinct([1, 2, 2, 3, 1, 4]); // [1, 2, 3, 4]
 const uniqueNames = distinct(users.map(u => u.name));
 
-// Remove duplicates by property
+// Remove duplicates by property - works with iterables
 const uniqueUsers = distinctBy(users, user => user.email);
-const latestVersions = distinctBy(releases, r => r.major + '.' + r.minor);
-
-// With prototype extensions
-const deduped = rawData
-  .distinct()
-  .sort();
-
-const uniqueCustomers = orders
-  .distinctBy(order => order.customerId)
-  .map(order => order.customerId);`;
+const latestVersions = distinctBy(releases, r => r.major + '.' + r.minor);`;
 
   const sequenceOperationsExample = `import { chunked, windowed, zipWithNext } from 'kotlinify-ts/collections';
 
@@ -184,55 +181,53 @@ const uniqueCustomers = orders
 const batches = chunked(records, 100);
 const pages = chunked(items, pageSize);
 
-// Sliding windows
-const movingAverages = windowed(prices, 5)
-  .map(window => window.reduce((a, b) => a + b, 0) / window.length);
+// Chunked with transform
+const sums = chunked(numbers, 10, chunk => chunk.reduce((a, b) => a + b, 0));
+const processed = chunked(records, 100, batch => processBatch(batch));
 
-// Custom step for windows
+// Sliding windows
+const windows = windowed(prices, 5);
 const samples = windowed(dataPoints, 10, 5); // window of 10, step by 5
 
+// Windowed with transform
+const movingAvg = windowed(
+  prices,
+  5,           // window size
+  1,           // step
+  false,       // no partial windows
+  window => window.reduce((a, b) => a + b, 0) / window.length
+);
+
+// Partial windows
+const allWindows = windowed(data, 3, 1, true); // includes partial at end
+
 // Zip with next - create pairs of consecutive elements
-const transitions = zipWithNext(states);
-const deltas = zipWithNext(values)
-  .map(([prev, curr]) => curr - prev);
+const transitions = zipWithNext(states); // [[s1, s2], [s2, s3], ...]
 
-// Distinct by selector
-const uniqueUsers = distinctBy(users, user => user.email);
-const latestVersions = distinctBy(releases, release => release.major);
-
-// With prototype extensions
-dataPoints
-  .windowed(3)
-  .map(window => calculateTrend(window))
-  .filter(trend => trend.significant);
-
-logEntries
-  .zipWithNext()
-  .map(([prev, curr]) => curr.timestamp - prev.timestamp)
-  .filter(delta => delta > threshold);`;
+// Zip with next and transform
+const deltas = zipWithNext(values, (prev, curr) => curr - prev);
+const changes = zipWithNext(states, (from, to) => ({ from, to }));`;
 
   const setOperationsExample = `import { union, intersect, subtract } from 'kotlinify-ts/collections';
+
+// All set operations work with iterables (arrays, generators, etc.)
 
 // Union - combine unique elements
 const allUsers = union(activeUsers, newUsers);
 const allTags = union(userTags, systemTags);
 
-// Intersect - common elements only
+// Works with generators
+function* gen1() { yield 1; yield 2; }
+function* gen2() { yield 2; yield 3; }
+const combined = union(gen1(), gen2()); // [1, 2, 3]
+
+// Intersect - common elements only (preserves first iterable's order)
 const commonSkills = intersect(requiredSkills, userSkills);
 const sharedPermissions = intersect(rolePerms, userPerms);
 
-// Subtract - remove elements
+// Subtract - remove elements from first iterable
 const missingFeatures = subtract(requiredFeatures, implementedFeatures);
-const nonAdmins = subtract(allUsers, adminUsers);
-
-// With prototype extensions
-const eligibleUsers = activeUsers
-  .intersect(premiumUsers)
-  .subtract(bannedUsers);
-
-const newFeatures = proposedFeatures
-  .subtract(implementedFeatures)
-  .subtract(rejectedFeatures);`;
+const nonAdmins = subtract(allUsers, adminUsers);`;
 
   const aggregationsExample = `import { count, sum, average, min, max, minOrNull, maxOrNull, sumOf, maxBy, minBy, all, any, none } from 'kotlinify-ts/collections';
 
@@ -282,7 +277,7 @@ const isComplete = tasks
 const needsReview = pullRequests
   .any(pr => pr.reviewers.length === 0);`;
 
-  const practicalExample = `import 'kotlinify-ts/collections';
+  const practicalExample = `import { groupBy, distinctBy, chunked, windowed, partition, associateBy, maxBy, sumOf, first, last, flatMap } from 'kotlinify-ts/collections';
 
 // Data processing pipeline
 interface Sale {
@@ -296,43 +291,34 @@ interface Sale {
 
 // Analyze sales data
 function analyzeSales(sales: Sale[]) {
-  // Group by region and calculate totals
-  const regionTotals = sales
-    .groupBy(sale => sale.region)
-    .let(grouped =>
-      Object.entries(grouped).map(([region, sales]) => ({
-        region,
-        total: sales.sumOf(s => s.amount),
-        count: sales.length,
-        average: sales.sumOf(s => s.amount) / sales.length
-      }))
-    );
+  // Group by region and calculate totals - returns Map
+  const regionMap = groupBy(sales, sale => sale.region);
+  const regionTotals = Array.from(regionMap).map(([region, sales]) => ({
+    region,
+    total: sumOf(sales, s => s.amount),
+    count: sales.length,
+    average: sumOf(sales, s => s.amount) / sales.length
+  }));
 
   // Find top performers
-  const topSale = sales.maxBy(sale => sale.amount);
+  const topSale = maxBy(sales, sale => sale.amount);
 
   // Identify unique customers
-  const uniqueCustomers = sales
-    .distinctBy(sale => sale.userId)
+  const uniqueCustomers = distinctBy(sales, sale => sale.userId)
     .map(sale => sale.userId);
 
-  // Process in batches for API calls
-  const batches = sales
-    .chunked(50)
-    .map(batch => processBatch(batch));
+  // Process in batches with transform
+  const batches = chunked(sales, 50, batch => processBatch(batch));
 
   // Analyze trends with sliding windows
-  const dailySales = sales
-    .groupBy(sale => sale.date.toDateString())
-    .let(grouped => Object.values(grouped));
+  const dailySalesMap = groupBy(sales, sale => sale.date.toDateString());
+  const dailySales = Array.from(dailySalesMap.values());
 
-  const weeklyTrends = dailySales
-    .windowed(7)
-    .map(week => ({
-      start: week.first().first().date,
-      end: week.last().first().date,
-      total: week.flatMap(day => day).sumOf(s => s.amount)
-    }));
+  const weeklyTrends = windowed(dailySales, 7, 1, false, week => ({
+    start: first(first(week)).date,
+    end: first(last(week)).date,
+    total: sumOf(flatMap(week, day => day), s => s.amount)
+  }));
 
   return {
     regionTotals,
@@ -354,27 +340,24 @@ interface Product {
 
 function manageInventory(products: Product[]) {
   // Partition into stock levels
-  const [inStock, lowStock] = products
-    .partition(p => p.stock > p.reorderPoint);
+  const [inStock, lowStock] = partition(products, p => p.stock > p.reorderPoint);
 
-  // Group by category for reporting
-  const byCategory = products
-    .groupBy(p => p.category)
-    .let(grouped =>
-      Object.entries(grouped).map(([category, items]) => ({
-        category,
-        totalStock: items.sumOf(p => p.stock),
-        needsReorder: items.filter(p => p.stock <= p.reorderPoint)
-      }))
-    );
+  // Group by category for reporting - returns Map
+  const categoryMap = groupBy(products, p => p.category);
+  const byCategory = Array.from(categoryMap).map(([category, items]) => ({
+    category,
+    totalStock: sumOf(items, p => p.stock),
+    needsReorder: items.filter(p => p.stock <= p.reorderPoint)
+  }));
 
-  // Create quick lookup maps
-  const productLookup = products.associateBy(p => p.id);
+  // Create quick lookup map - type-safe access
+  const productLookup = associateBy(products, p => p.id);
 
   // Find critical items
   const critical = products
     .filter(p => p.stock === 0)
-    .map(p => productLookup[p.id]);
+    .map(p => productLookup.get(p.id))
+    .filter(p => p !== undefined);
 
   return { inStock, lowStock, byCategory, critical };
 }`;
@@ -387,46 +370,47 @@ const first = users.find(u => u.active); // might be undefined
 const last = users.filter(u => u.active).pop(); // awkward for last matching
 
 // kotlinify-ts
-const first = users.first(u => u.active); // throws if not found
-const last = users.lastOrNull(u => u.active); // safe version
+const first = first(users, u => u.active); // throws if not found
+const last = lastOrNull(users, u => u.active); // safe version
 
 // Grouping
-// JavaScript - manual grouping
+// JavaScript - manual grouping with plain object
 const grouped = users.reduce((acc, user) => {
   if (!acc[user.role]) acc[user.role] = [];
   acc[user.role].push(user);
   return acc;
-}, {});
+}, {} as Record<string, User[]>); // loses type safety
 
-// kotlinify-ts - declarative
-const grouped = users.groupBy(user => user.role);
+// kotlinify-ts - returns Map for type safety
+const grouped = groupBy(users, user => user.role); // Map<string, User[]>
+for (const [role, users] of grouped) { /* fully typed */ }
 
 // Partitioning
-// JavaScript - manual partitioning
+// JavaScript - manual partitioning (2 passes!)
 const active = users.filter(u => u.active);
 const inactive = users.filter(u => !u.active);
 
 // kotlinify-ts - single pass
-const [active, inactive] = users.partition(u => u.active);
+const [active, inactive] = partition(users, u => u.active);
 
-// Chunking
-// JavaScript - manual chunking
+// Chunking with transform
+// JavaScript - manual chunking and mapping
 const chunks = [];
 for (let i = 0; i < items.length; i += size) {
-  chunks.push(items.slice(i, i + size));
+  chunks.push(processBatch(items.slice(i, i + size)));
 }
 
-// kotlinify-ts - declarative
-const chunks = items.chunked(size);
+// kotlinify-ts - declarative with transform
+const chunks = chunked(items, size, batch => processBatch(batch));
 
 // Set operations
 // JavaScript - using Set
 const union = [...new Set([...arr1, ...arr2])];
 const intersect = arr1.filter(x => new Set(arr2).has(x));
 
-// kotlinify-ts - direct methods
-const union = arr1.union(arr2);
-const intersect = arr1.intersect(arr2);`;
+// kotlinify-ts - works with any iterable
+const union = union(arr1, arr2);
+const intersect = intersect(arr1, arr2);`;
 
   return (
     <DocsPageLayout>
@@ -480,8 +464,8 @@ const topUser = users.reduce((max, user) =>
             <CodeBlock
               code={`import { groupBy, chunked, partition, maxBy } from 'kotlinify-ts/collections';
 
-// Group users? One line.
-const usersByRole = groupBy(users, user => user.role);
+// Group users? One line. Returns type-safe Map.
+const usersByRole = groupBy(users, user => user.role); // Map<string, User[]>
 
 // Chunk data? Done.
 const chunks = chunked(data, chunkSize);
@@ -492,17 +476,13 @@ const [active, inactive] = partition(users, u => u.isActive);
 // Find max? Type-safe and null-safe.
 const topUser = maxBy(users, user => user.score);
 
-// Or with prototype extensions - even cleaner:
-import 'kotlinify-ts/collections';
-
-const analysis = users
-  .groupBy(u => u.role)
-  .let(groups => Object.entries(groups))
+// Analyze by role with Map iteration
+const analysis = Array.from(groupBy(users, u => u.role))
   .map(([role, users]) => ({
     role,
     count: users.length,
-    avgScore: users.sumOf(u => u.score) / users.length,
-    topPerformer: users.maxBy(u => u.performance)
+    avgScore: users.reduce((sum, u) => sum + u.score, 0) / users.length,
+    topPerformer: maxBy(users, u => u.performance)
   }));
 
 // What took 20 lines now takes 5.
@@ -637,9 +617,9 @@ const analysis = users
                 <li><code className="text-slate-500">zip(array1, array2)</code> - Combine into pairs</li>
                 <li><code className="text-slate-500">unzip(pairs)</code> - Split pairs into arrays</li>
                 <li><code className="text-slate-500">associate(transform)</code> - Create Map</li>
-                <li><code className="text-slate-500">associateBy(keySelector)</code> - Map by key</li>
-                <li><code className="text-slate-500">associateWith(valueSelector)</code> - Map values</li>
-                <li><code className="text-slate-500">groupBy(keySelector)</code> - Group by key</li>
+                <li><code className="text-slate-500">associateBy(key, value?)</code> - Map by key (returns Map)</li>
+                <li><code className="text-slate-500">associateWith(valueSelector)</code> - Map values (returns Map)</li>
+                <li><code className="text-slate-500">groupBy(key, value?)</code> - Group by key (returns Map)</li>
                 <li><code className="text-slate-500">partition(predicate)</code> - Split in two</li>
               </ul>
             </div>
@@ -657,25 +637,25 @@ const analysis = users
             <div>
               <h4 className="text-white font-semibold mb-3">Filtering & Distinct</h4>
               <ul className="space-y-2 text-sm">
-                <li><code className="text-slate-500">slice(indices)</code> - Get at indices</li>
-                <li><code className="text-slate-500">distinct()</code> - Remove duplicates</li>
-                <li><code className="text-slate-500">distinctBy(selector)</code> - Unique by property</li>
+                <li><code className="text-slate-500">slice(indices | Range)</code> - Get at indices or range</li>
+                <li><code className="text-slate-500">distinct()</code> - Remove duplicates (accepts iterables)</li>
+                <li><code className="text-slate-500">distinctBy(selector)</code> - Unique by property (accepts iterables)</li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-3">Sequence Operations</h4>
               <ul className="space-y-2 text-sm">
-                <li><code className="text-slate-500">chunked(size)</code> - Fixed-size chunks</li>
-                <li><code className="text-slate-500">windowed(size, step?)</code> - Sliding windows</li>
-                <li><code className="text-slate-500">zipWithNext()</code> - Consecutive pairs</li>
+                <li><code className="text-slate-500">chunked(size, transform?)</code> - Fixed-size chunks with optional transform</li>
+                <li><code className="text-slate-500">windowed(size, step?, partial?, transform?)</code> - Sliding windows</li>
+                <li><code className="text-slate-500">zipWithNext(transform?)</code> - Consecutive pairs with optional transform</li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-3">Set Operations</h4>
               <ul className="space-y-2 text-sm">
-                <li><code className="text-slate-500">union(other)</code> - Combine unique</li>
-                <li><code className="text-slate-500">intersect(other)</code> - Common only</li>
-                <li><code className="text-slate-500">subtract(other)</code> - Remove elements</li>
+                <li><code className="text-slate-500">union(other)</code> - Combine unique (accepts iterables)</li>
+                <li><code className="text-slate-500">intersect(other)</code> - Common only (accepts iterables)</li>
+                <li><code className="text-slate-500">subtract(other)</code> - Remove elements (accepts iterables)</li>
               </ul>
             </div>
             <div>
@@ -686,7 +666,7 @@ const analysis = users
                 <li><code className="text-slate-500">average()</code> - Average of numbers</li>
                 <li><code className="text-slate-500">min()</code>, <code className="text-slate-500">max()</code> - Min/max values</li>
                 <li><code className="text-slate-500">minOrNull()</code>, <code className="text-slate-500">maxOrNull()</code> - Safe min/max</li>
-                <li><code className="text-slate-500">sumOf(selector)</code> - Sum with selector</li>
+                <li><code className="text-slate-500">sumOf(selector)</code> - Sum with selector (accepts iterables)</li>
                 <li><code className="text-slate-500">maxBy(selector)</code>, <code className="text-slate-500">minBy(selector)</code> - Find by property</li>
                 <li><code className="text-slate-500">all(predicate)</code> - Check all match</li>
                 <li><code className="text-slate-500">any(predicate?)</code> - Check any match</li>

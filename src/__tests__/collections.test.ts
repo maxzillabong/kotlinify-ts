@@ -37,6 +37,13 @@ import {
   groupBy,
   chunked,
   windowed,
+  associateBy,
+  associateWith,
+  zipWithNext,
+  distinctBy,
+  union,
+  intersect,
+  subtract,
 } from '../collections'
 
 describe('Collection Functions', () => {
@@ -189,8 +196,8 @@ describe('Collection Functions', () => {
       expect(slice([1, 2, 3, 4, 5], [0, 2, 4])).toEqual([1, 3, 5])
     })
 
-    it('handles out of bounds indices', () => {
-      expect(slice([1, 2, 3], [1, 10])).toEqual([2])
+    it('throws on out of bounds indices', () => {
+      expect(() => slice([1, 2, 3], [1, 10])).toThrow(RangeError)
     })
   })
 
@@ -295,8 +302,8 @@ describe('Collection Functions', () => {
   describe('groupBy', () => {
     it('groups elements by key', () => {
       const result = groupBy([1, 2, 3, 4, 5], x => x % 2 === 0 ? 'even' : 'odd')
-      expect(result.even).toEqual([2, 4])
-      expect(result.odd).toEqual([1, 3, 5])
+      expect(result.get('even')).toEqual([2, 4])
+      expect(result.get('odd')).toEqual([1, 3, 5])
     })
   })
 
@@ -313,6 +320,146 @@ describe('Collection Functions', () => {
 
     it('respects step parameter', () => {
       expect(windowed([1, 2, 3, 4, 5], 2, 2)).toEqual([[1, 2], [3, 4]])
+    })
+  })
+
+  describe('associateBy', () => {
+    it('creates map from key selector', () => {
+      const users = [
+        { id: 1, name: 'Alice' },
+        { id: 2, name: 'Bob' },
+      ]
+      const map = associateBy(users, u => u.id)
+      expect(map.get(1)?.name).toBe('Alice')
+      expect(map.get(2)?.name).toBe('Bob')
+    })
+
+    it('uses last value for duplicate keys', () => {
+      const items = [
+        { key: 'a', value: 1 },
+        { key: 'a', value: 2 },
+      ]
+      const map = associateBy(items, i => i.key)
+      expect(map.get('a')?.value).toBe(2)
+    })
+
+    it('supports value transform', () => {
+      const users = [
+        { id: 1, name: 'Alice' },
+        { id: 2, name: 'Bob' },
+      ]
+      const map = associateBy(users, u => u.id, u => u.name)
+      expect(map.get(1)).toBe('Alice')
+      expect(map.get(2)).toBe('Bob')
+    })
+  })
+
+  describe('associateWith', () => {
+    it('creates map with values from selector', () => {
+      const keys = ['a', 'b', 'c']
+      const map = associateWith(keys, k => k.toUpperCase())
+      expect(map.get('a')).toBe('A')
+      expect(map.get('b')).toBe('B')
+    })
+  })
+
+  describe('groupBy with transform', () => {
+    it('groups and transforms values', () => {
+      const users = [
+        { id: 1, role: 'admin', name: 'Alice' },
+        { id: 2, role: 'user', name: 'Bob' },
+        { id: 3, role: 'admin', name: 'Charlie' },
+      ]
+      const map = groupBy(users, u => u.role, u => u.name)
+      expect(map.get('admin')).toEqual(['Alice', 'Charlie'])
+      expect(map.get('user')).toEqual(['Bob'])
+    })
+  })
+
+  describe('slice with Range', () => {
+    it('slices with range object', () => {
+      const arr = [0, 1, 2, 3, 4, 5]
+      expect(slice(arr, { start: 1, endInclusive: 3 })).toEqual([1, 2, 3])
+    })
+
+    it('supports step in range', () => {
+      const arr = [0, 1, 2, 3, 4, 5]
+      expect(slice(arr, { start: 0, endInclusive: 4, step: 2 })).toEqual([0, 2, 4])
+    })
+
+    it('throws on out of bounds', () => {
+      const arr = [1, 2, 3]
+      expect(() => slice(arr, [5])).toThrow(RangeError)
+      expect(() => slice(arr, { start: 5, endInclusive: 5 })).toThrow(RangeError)
+    })
+  })
+
+  describe('chunked with transform', () => {
+    it('transforms chunks', () => {
+      const arr = [1, 2, 3, 4, 5]
+      const result = chunked(arr, 2, chunk => chunk.reduce((a, b) => a + b, 0))
+      expect(result).toEqual([3, 7, 5])
+    })
+  })
+
+  describe('windowed enhancements', () => {
+    it('supports partial windows', () => {
+      const arr = [1, 2, 3, 4]
+      expect(windowed(arr, 3, 2, true)).toEqual([[1, 2, 3], [3, 4]])
+    })
+
+    it('supports transform', () => {
+      const arr = [1, 2, 3, 4]
+      const result = windowed(arr, 2, 1, false, w => w[0] + w[1])
+      expect(result).toEqual([3, 5, 7])
+    })
+
+    it('defaults step to size', () => {
+      const arr = [1, 2, 3, 4, 5, 6]
+      expect(windowed(arr, 2)).toEqual([[1, 2], [3, 4], [5, 6]])
+    })
+  })
+
+  describe('zipWithNext with transform', () => {
+    it('transforms pairs', () => {
+      const arr = [1, 2, 3, 4]
+      const result = zipWithNext(arr, (a, b) => a + b)
+      expect(result).toEqual([3, 5, 7])
+    })
+  })
+
+  describe('distinct/distinctBy with iterables', () => {
+    it('distinct works with generators', () => {
+      function* gen() {
+        yield 1; yield 2; yield 1; yield 3
+      }
+      expect(distinct(gen())).toEqual([1, 2, 3])
+    })
+
+    it('distinctBy works with iterables', () => {
+      const users = [
+        { id: 1, name: 'Alice' },
+        { id: 2, name: 'Bob' },
+        { id: 1, name: 'Alice2' },
+      ]
+      expect(distinctBy(users, u => u.id).length).toBe(2)
+    })
+  })
+
+  describe('set operations with iterables', () => {
+    it('union with iterables', () => {
+      function* gen1() { yield 1; yield 2 }
+      function* gen2() { yield 2; yield 3 }
+      expect(union(gen1(), gen2())).toEqual([1, 2, 3])
+    })
+
+    it('intersect preserves order', () => {
+      expect(intersect([1, 2, 3], [3, 2, 4])).toEqual([2, 3])
+    })
+
+    it('subtract with iterables', () => {
+      function* gen() { yield 1; yield 2; yield 3 }
+      expect(subtract(gen(), [2])).toEqual([1, 3])
     })
   })
 })

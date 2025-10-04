@@ -77,9 +77,12 @@
       ];
 
       document.getElementById('run').addEventListener('click', () => {
+        // groupBy now returns a Map for type safety
         const revenueByTeam = groupBy(ledger, (entry) => entry.team);
+
+        // Convert Map to totals object
         const totals = Object.fromEntries(
-          Object.entries(revenueByTeam).map(([team, entries]) => [
+          Array.from(revenueByTeam).map(([team, entries]) => [
             team,
             {
               total: sumOf(entries, (e) => e.revenue),
@@ -88,21 +91,24 @@
           ])
         );
 
+        // windowed now accepts a transform function directly
         const rolling = windowed(
           ledger
             .sort((a, b) => a.month.localeCompare(b.month))
             .map((entry) => entry.revenue),
-          3,
-          1
-        ).map((window) => Math.round(average(window)));
+          3,     // window size
+          1,     // step
+          false, // no partial windows
+          (window) => Math.round(average(window)) // transform function
+        );
 
         const topTeam = maxBy(Object.entries(totals), ([, stats]) => stats.total);
 
-        const forecast = chunked(ledger, 3)
-          .map((quarter) => ({
-            teams: quarter.map((e) => e.team),
-            outlook: sumOf(quarter, (e) => e.revenue) * 1.12,
-          }));
+        // chunked with transform function
+        const forecast = chunked(ledger, 3, (quarter) => ({
+          teams: quarter.map((e) => e.team),
+          outlook: sumOf(quarter, (e) => e.revenue) * 1.12,
+        }));
 
         output.textContent = JSON.stringify(
           {

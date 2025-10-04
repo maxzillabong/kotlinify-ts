@@ -90,6 +90,7 @@
             await emit(sample);
           }
         })
+          .debounce(150) // Smooth out bursty samples
           .map((sample) => ({
             ...sample,
             health: sample.cpu < 70 && sample.mem < 70 ? 'healthy' : 'degraded',

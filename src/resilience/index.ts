@@ -1,323 +1,422 @@
-export type ScheduleDecision<State> = {
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+export type ScheduleDecision<State, Output> = {
   cont: boolean
   delay: number
   state: State
+  output: Output
 }
 
-export class Schedule<Input, Output> {
+type ScheduleStep<Input, State, Output> = (input: Input, state: State) => ScheduleDecision<State, Output>
+
+export class Schedule<Input, State, Output> {
   constructor(
-    private readonly initial: Output,
-    private readonly update: (
-      input: Input,
-      state: Output
-    ) => ScheduleDecision<Output>
+    private readonly initialFactory: () => State,
+    private readonly step: ScheduleStep<Input, State, Output>
   ) {}
 
-  static recurs<A = unknown>(n: number): Schedule<A, number> {
-    return new Schedule(0, (_, count) => ({
-      cont: count < n,
-      delay: 0,
-      state: count + 1,
-    }))
+  get initialState(): State {
+    return this.initialFactory()
   }
 
-  static exponential<A = unknown>(
-    baseDelay: number,
-    factor: number = 2.0
-  ): Schedule<A, number> {
-    return new Schedule(baseDelay, (_, currentDelay) => ({
-      cont: true,
-      delay: currentDelay,
-      state: currentDelay * factor,
-    }))
+  advance(input: Input, state: State): ScheduleDecision<State, Output> {
+    return this.step(input, state)
   }
 
-  static fibonacci<A = unknown>(baseDelay: number): Schedule<A, number> {
-    return new Schedule({ prev: 0, curr: baseDelay }, (_, { prev, curr }) => ({
-      cont: true,
-      delay: curr,
-      state: { prev: curr, curr: prev + curr },
-    })) as unknown as Schedule<A, number>
+  map<R>(transform: (output: Output) => R): Schedule<Input, State, R> {
+    return new Schedule<Input, State, R>(
+      () => this.initialFactory(),
+      (input, state) => {
+        const decision = this.step(input, state)
+        return {
+          cont: decision.cont,
+          delay: decision.delay,
+          state: decision.state,
+          output: transform(decision.output),
+        }
+      }
+    )
   }
 
-  static spaced<A = unknown>(delay: number): Schedule<A, number> {
-    return new Schedule(0, (_, count) => ({
-      cont: true,
-      delay,
-      state: count + 1,
-    }))
-  }
-
-  static linear<A = unknown>(baseDelay: number): Schedule<A, number> {
-    return new Schedule(baseDelay, (_, currentDelay) => ({
-      cont: true,
-      delay: currentDelay,
-      state: currentDelay + baseDelay,
-    }))
-  }
-
-  static identity<A>(): Schedule<A, A> {
-    return new Schedule(null as unknown as A, (input) => ({
-      cont: true,
-      delay: 0,
-      state: input,
-    }))
-  }
-
-  static collect<A>(): Schedule<A, A[]> {
-    return new Schedule<A, A[]>([] as A[], (input, collected) => ({
-      cont: true,
-      delay: 0,
-      state: [...collected, input] as A[],
-    }))
-  }
-
-  static forever<A = unknown>(): Schedule<A, number> {
-    return new Schedule(0, (_, count) => ({
-      cont: true,
-      delay: 0,
-      state: count + 1,
-    }))
-  }
-
-  static doWhile<A>(
-    predicate: (input: A, state: number) => boolean
-  ): Schedule<A, number> {
-    return new Schedule(0, (input, count) => ({
-      cont: predicate(input, count),
-      delay: 0,
-      state: count + 1,
-    }))
-  }
-
-  static doUntil<A>(
-    predicate: (input: A, state: number) => boolean
-  ): Schedule<A, number> {
-    return new Schedule(0, (input, count) => ({
-      cont: !predicate(input, count),
-      delay: 0,
-      state: count + 1,
-    }))
-  }
-
-  and<B>(other: Schedule<Input, B>): Schedule<Input, [Output, B]> {
-    return new Schedule(
-      [this.initial, other.initial] as [Output, B],
+  and<OtherState, OtherOutput>(
+    other: Schedule<Input, OtherState, OtherOutput>
+  ): Schedule<Input, [State, OtherState], [Output, OtherOutput]> {
+    return new Schedule<Input, [State, OtherState], [Output, OtherOutput]>(
+      () => [this.initialFactory(), other.initialState],
       (input, [stateA, stateB]) => {
-        const decisionA = this.update(input, stateA)
-        const decisionB = other.update(input, stateB)
+        const decisionA = this.step(input, stateA)
+        const decisionB = other.advance(input, stateB)
         return {
           cont: decisionA.cont && decisionB.cont,
           delay: Math.max(decisionA.delay, decisionB.delay),
-          state: [decisionA.state, decisionB.state] as [Output, B],
+          state: [decisionA.state, decisionB.state],
+          output: [decisionA.output, decisionB.output],
         }
       }
     )
   }
 
-  or<B>(other: Schedule<Input, B>): Schedule<Input, [Output, B]> {
-    return new Schedule(
-      [this.initial, other.initial] as [Output, B],
+  or<OtherState, OtherOutput>(
+    other: Schedule<Input, OtherState, OtherOutput>
+  ): Schedule<Input, [State, OtherState], [Output, OtherOutput]> {
+    return new Schedule<Input, [State, OtherState], [Output, OtherOutput]>(
+      () => [this.initialFactory(), other.initialState],
       (input, [stateA, stateB]) => {
-        const decisionA = this.update(input, stateA)
-        const decisionB = other.update(input, stateB)
+        const decisionA = this.step(input, stateA)
+        const decisionB = other.advance(input, stateB)
         return {
           cont: decisionA.cont || decisionB.cont,
           delay: Math.min(decisionA.delay, decisionB.delay),
-          state: [decisionA.state, decisionB.state] as [Output, B],
+          state: [decisionA.state, decisionB.state],
+          output: [decisionA.output, decisionB.output],
         }
       }
     )
   }
 
-  andThen<B>(next: Schedule<Input, B>): Schedule<Input, Output | B> {
-    type PhaseState = { tag: 'first'; state: Output } | { tag: 'second'; state: B }
-    const initialState: PhaseState = { tag: 'first', state: this.initial }
-
-    return new Schedule<Input, PhaseState>(initialState, (input, current: PhaseState) => {
-      if (current.tag === 'first') {
-        const decision = this.update(input, current.state)
-        if (decision.cont) {
+  andThen<OtherState, OtherOutput>(
+    other: Schedule<Input, OtherState, OtherOutput>
+  ): Schedule<Input, { phase: 'first'; state: State } | { phase: 'second'; state: OtherState }, Output | OtherOutput> {
+    type PhaseState = { phase: 'first'; state: State } | { phase: 'second'; state: OtherState }
+    return new Schedule<Input, PhaseState, Output | OtherOutput>(
+      () => ({ phase: 'first', state: this.initialFactory() }),
+      (input, current) => {
+        if (current.phase === 'first') {
+          const decision = this.step(input, current.state)
+          if (decision.cont) {
+            return {
+              cont: true,
+              delay: decision.delay,
+              state: { phase: 'first', state: decision.state },
+              output: decision.output,
+            }
+          }
           return {
             cont: true,
             delay: decision.delay,
-            state: { tag: 'first', state: decision.state } as PhaseState,
+            state: { phase: 'second', state: other.initialState },
+            output: decision.output,
           }
         }
+
+        const decision = other.advance(input, current.state)
         return {
-          cont: true,
+          cont: decision.cont,
           delay: decision.delay,
-          state: { tag: 'second', state: next.initial } as PhaseState,
+          state: { phase: 'second', state: decision.state },
+          output: decision.output,
         }
       }
+    )
+  }
 
-      const decision = next.update(input, current.state)
-      return {
-        cont: decision.cont,
-        delay: decision.delay,
-        state: { tag: 'second', state: decision.state } as PhaseState,
+  zipLeft<OtherState, OtherOutput>(
+    other: Schedule<Input, OtherState, OtherOutput>
+  ): Schedule<Input, [State, OtherState], Output> {
+    return this.and(other).map(([left]) => left)
+  }
+
+  zipRight<OtherState, OtherOutput>(
+    other: Schedule<Input, OtherState, OtherOutput>
+  ): Schedule<Input, [State, OtherState], OtherOutput> {
+    return this.and(other).map(([, right]) => right)
+  }
+
+  jittered(maxFactor: number = 0.1, rng: () => number = Math.random): Schedule<Input, State, Output> {
+    return new Schedule<Input, State, Output>(
+      () => this.initialFactory(),
+      (input, state) => {
+        const decision = this.step(input, state)
+        const fraction = Math.max(0, Math.min(1, rng()))
+        const jitter = decision.delay * maxFactor * fraction
+        return {
+          cont: decision.cont,
+          delay: Math.max(0, decision.delay + jitter),
+          state: decision.state,
+          output: decision.output,
+        }
       }
-    }) as unknown as Schedule<Input, Output | B>
-  }
-
-  zipLeft<B>(other: Schedule<Input, B>): Schedule<Input, Output> {
-    return this.and(other).map(([a]) => a)
-  }
-
-  zipRight<B>(other: Schedule<Input, B>): Schedule<Input, B> {
-    return this.and(other).map(([, b]) => b)
-  }
-
-  map<B>(fn: (output: Output) => B): Schedule<Input, B> {
-    let origState = this.initial
-    return new Schedule(fn(this.initial), (input, _prevMapped) => {
-      const decision = this.update(input, origState)
-      origState = decision.state
-      return {
-        cont: decision.cont,
-        delay: decision.delay,
-        state: fn(decision.state),
-      }
-    })
-  }
-
-  jittered(maxFactor: number = 0.1): Schedule<Input, Output> {
-    return new Schedule(this.initial, (input, state) => {
-      const decision = this.update(input, state)
-      const jitter = Math.random() * maxFactor * decision.delay
-      return {
-        cont: decision.cont,
-        delay: decision.delay + jitter,
-        state: decision.state,
-      }
-    })
+    )
   }
 
   async retry<A>(action: () => A | Promise<A>): Promise<A> {
-    let state = this.initial
-    let _attempts = 0
+    let state = this.initialFactory()
 
     while (true) {
       try {
         return await Promise.resolve(action())
       } catch (error) {
-        const decision = this.update(error as Input, state)
+        const decision = this.step(error as Input, state)
 
         if (!decision.cont) {
           throw error
         }
 
         state = decision.state
-        _attempts++
 
         if (decision.delay > 0) {
-          await new Promise((resolve) => setTimeout(resolve, decision.delay))
+          await sleep(decision.delay)
         }
       }
     }
   }
 
   async repeat(action: () => Input | Promise<Input>): Promise<Output> {
-    let state = this.initial
-    let result: Input = await Promise.resolve(action())
+    let state = this.initialFactory()
 
     while (true) {
-      const decision = this.update(result, state)
+      const input = await Promise.resolve(action())
+      const decision = this.step(input, state)
 
       if (!decision.cont) {
-        return decision.state
+        return decision.output
       }
 
       state = decision.state
 
       if (decision.delay > 0) {
-        await new Promise((resolve) => setTimeout(resolve, decision.delay))
+        await sleep(decision.delay)
       }
-
-      result = await Promise.resolve(action())
     }
   }
 
-  async repeatOrElse<B>(
+  async repeatOrElse<R>(
     action: () => Input | Promise<Input>,
-    orElse: (error: unknown, state: Output) => B
-  ): Promise<Output | B> {
-    let state = this.initial
+    orElse: (error: unknown, lastOutput: Output | undefined) => R
+  ): Promise<Output | R> {
+    let state = this.initialFactory()
+    let lastOutput: Output | undefined
 
     try {
-      let result: Input = await Promise.resolve(action())
-
       while (true) {
-        const decision = this.update(result, state)
+        const input = await Promise.resolve(action())
+        const decision = this.step(input, state)
+        lastOutput = decision.output
 
         if (!decision.cont) {
-          return decision.state
+          return decision.output
         }
 
         state = decision.state
 
         if (decision.delay > 0) {
-          await new Promise((resolve) => setTimeout(resolve, decision.delay))
+          await sleep(decision.delay)
         }
-
-        result = await Promise.resolve(action())
       }
     } catch (error) {
-      return orElse(error, state)
+      return orElse(error, lastOutput)
     }
+  }
+
+  repeatSync(action: () => Input): Output {
+    let state = this.initialFactory()
+
+    while (true) {
+      const input = action()
+      const decision = this.step(input, state)
+
+      if (!decision.cont) {
+        return decision.output
+      }
+
+      state = decision.state
+
+      if (decision.delay > 0) {
+        const end = Date.now() + decision.delay
+        while (Date.now() < end) {
+          /* busy wait */
+        }
+      }
+    }
+  }
+
+  retrySync<A>(action: () => A): A {
+    let state = this.initialFactory()
+
+    while (true) {
+      try {
+        return action()
+      } catch (error) {
+        const decision = this.step(error as Input, state)
+
+        if (!decision.cont) {
+          throw error
+        }
+
+        state = decision.state
+
+        if (decision.delay > 0) {
+          const end = Date.now() + decision.delay
+          while (Date.now() < end) {
+            /* busy wait */
+          }
+        }
+      }
+    }
+  }
+
+  static recurs<A = unknown>(n: number): Schedule<A, number, number> {
+    return new Schedule<A, number, number>(
+      () => 0,
+      (_, count) => {
+        const shouldContinue = count < n
+        return {
+          cont: shouldContinue,
+          delay: 0,
+          state: count + 1,
+          output: shouldContinue ? count : count + 1,
+        }
+      }
+    )
+  }
+
+  static exponential<A = unknown>(
+    baseDelay: number,
+    factor: number = 2
+  ): Schedule<A, number, number> {
+    return new Schedule<A, number, number>(
+      () => baseDelay,
+      (_, currentDelay) => ({
+        cont: true,
+        delay: currentDelay,
+        state: currentDelay * factor,
+        output: currentDelay,
+      })
+    )
+  }
+
+  static fibonacci<A = unknown>(baseDelay: number): Schedule<A, { prev: number; curr: number }, number> {
+    type FibState = { prev: number; curr: number }
+    return new Schedule<A, FibState, number>(
+      () => ({ prev: 0, curr: baseDelay }),
+      (_, state) => {
+        const output = state.curr
+        const next: FibState = {
+          prev: state.curr,
+          curr: state.prev + state.curr,
+        }
+        return {
+          cont: true,
+          delay: output,
+          state: next,
+          output,
+        }
+      }
+    )
+  }
+
+  static spaced<A = unknown>(delay: number): Schedule<A, number, number> {
+    return new Schedule<A, number, number>(
+      () => 0,
+      (_, count) => ({
+        cont: true,
+        delay,
+        state: count + 1,
+        output: count + 1,
+      })
+    )
+  }
+
+  static linear<A = unknown>(baseDelay: number): Schedule<A, number, number> {
+    return new Schedule<A, number, number>(
+      () => baseDelay,
+      (_, currentDelay) => ({
+        cont: true,
+        delay: currentDelay,
+        state: currentDelay + baseDelay,
+        output: currentDelay,
+      })
+    )
+  }
+
+  static identity<A>(): Schedule<A, void, A> {
+    return new Schedule<A, void, A>(
+      () => undefined,
+      (input) => ({
+        cont: true,
+        delay: 0,
+        state: undefined,
+        output: input,
+      })
+    )
+  }
+
+  static collect<A>(): Schedule<A, A[], readonly A[]> {
+    return new Schedule<A, A[], readonly A[]>(
+      () => [],
+      (input, state) => {
+        state.push(input)
+        return {
+          cont: true,
+          delay: 0,
+          state,
+          output: state.slice(),
+        }
+      }
+    )
+  }
+
+  static forever<A = unknown>(): Schedule<A, number, number> {
+    return new Schedule<A, number, number>(
+      () => 0,
+      (_, count) => ({
+        cont: true,
+        delay: 0,
+        state: count + 1,
+        output: count + 1,
+      })
+    )
+  }
+
+  static doWhile<A>(predicate: (input: A, state: number) => boolean): Schedule<A, number, number> {
+    return new Schedule<A, number, number>(
+      () => 0,
+      (input, count) => ({
+        cont: predicate(input, count),
+        delay: 0,
+        state: count + 1,
+        output: count + 1,
+      })
+    )
+  }
+
+  static doUntil<A>(predicate: (input: A, state: number) => boolean): Schedule<A, number, number> {
+    return new Schedule<A, number, number>(
+      () => 0,
+      (input, count) => ({
+        cont: !predicate(input, count),
+        delay: 0,
+        state: count + 1,
+        output: count + 1,
+      })
+    )
   }
 }
 
-export async function retry<A, Input, State>(
-  schedule: Schedule<Input, State>,
+export async function retry<A, Input, State, Output>(
+  schedule: Schedule<Input, State, Output>,
   action: () => A | Promise<A>
 ): Promise<A> {
   return schedule.retry(action)
 }
 
-export async function repeat<A, Output>(
-  schedule: Schedule<A, Output>,
-  action: () => A | Promise<A>
+export async function repeat<Input, State, Output>(
+  schedule: Schedule<Input, State, Output>,
+  action: () => Input | Promise<Input>
 ): Promise<Output> {
   return schedule.repeat(action)
 }
 
-export function repeatSync<A, Output>(
-  schedule: Schedule<A, Output>,
-  action: () => A
+export function repeatSync<Input, State, Output>(
+  schedule: Schedule<Input, State, Output>,
+  action: () => Input
 ): Output {
-  let state = schedule['initial']
-  let result: A = action()
-
-  while (true) {
-    const decision = schedule['update'](result, state)
-
-    if (!decision.cont) {
-      return decision.state
-    }
-
-    state = decision.state
-    result = action()
-  }
+  return schedule.repeatSync(action)
 }
 
-export function retrySync<A, Input, State>(
-  schedule: Schedule<Input, State>,
+export function retrySync<A, Input, State, Output>(
+  schedule: Schedule<Input, State, Output>,
   action: () => A
 ): A {
-  let state = schedule['initial']
-
-  while (true) {
-    try {
-      return action()
-    } catch (error) {
-      const decision = schedule['update'](error as Input, state)
-
-      if (!decision.cont) {
-        throw error
-      }
-
-      state = decision.state
-    }
-  }
+  return schedule.retrySync(action)
 }

@@ -44,6 +44,28 @@ export class Sequence<T> {
     })
   }
 
+  mapIndexed<U>(transform: (index: number, value: T) => U): Sequence<U> {
+    const source = this.iterator
+    return new Sequence(function* () {
+      let index = 0
+      for (const item of { [Symbol.iterator]: source }) {
+        yield transform(index++, item)
+      }
+    })
+  }
+
+  mapNotNull<U>(transform: (value: T) => U | null | undefined): Sequence<U> {
+    const source = this.iterator
+    return new Sequence(function* () {
+      for (const item of { [Symbol.iterator]: source }) {
+        const result = transform(item)
+        if (result != null) {
+          yield result
+        }
+      }
+    })
+  }
+
   filter(predicate: (value: T) => boolean): Sequence<T> {
     const source = this.iterator
     return new Sequence(function* () {
@@ -55,11 +77,43 @@ export class Sequence<T> {
     })
   }
 
+  filterIndexed(predicate: (index: number, value: T) => boolean): Sequence<T> {
+    const source = this.iterator
+    return new Sequence(function* () {
+      let index = 0
+      for (const item of { [Symbol.iterator]: source }) {
+        if (predicate(index++, item)) {
+          yield item
+        }
+      }
+    })
+  }
+
+  filterNot(predicate: (value: T) => boolean): Sequence<T> {
+    const source = this.iterator
+    return new Sequence(function* () {
+      for (const item of { [Symbol.iterator]: source }) {
+        if (!predicate(item)) {
+          yield item
+        }
+      }
+    })
+  }
+
   flatMap<U>(transform: (value: T) => Iterable<U>): Sequence<U> {
     const source = this.iterator
     return new Sequence(function* () {
       for (const item of { [Symbol.iterator]: source }) {
         yield* transform(item)
+      }
+    })
+  }
+
+  flatten<U>(this: Sequence<Iterable<U>>): Sequence<U> {
+    const source = this.iterator
+    return new Sequence(function* () {
+      for (const item of { [Symbol.iterator]: source }) {
+        yield* item
       }
     })
   }
@@ -163,24 +217,38 @@ export class Sequence<T> {
     })
   }
 
-  chunked(size: number): Sequence<T[]> {
+  chunked(size: number): Sequence<T[]>
+  chunked<R>(size: number, transform: (chunk: readonly T[]) => R): Sequence<R>
+  chunked<R>(size: number, transform?: (chunk: readonly T[]) => R): Sequence<T[] | R> {
     const source = this.iterator
     return new Sequence(function* () {
       let chunk: T[] = []
       for (const item of { [Symbol.iterator]: source }) {
         chunk.push(item)
         if (chunk.length === size) {
-          yield chunk
+          yield transform ? transform(chunk) : chunk
           chunk = []
         }
       }
       if (chunk.length > 0) {
-        yield chunk
+        yield transform ? transform(chunk) : chunk
       }
-    })
+    }) as any
   }
 
-  windowed(size: number, step: number = 1, partialWindows: boolean = false): Sequence<T[]> {
+  windowed(size: number, step?: number, partialWindows?: boolean): Sequence<T[]>
+  windowed<R>(
+    size: number,
+    step: number,
+    partialWindows: boolean,
+    transform: (window: readonly T[]) => R
+  ): Sequence<R>
+  windowed<R>(
+    size: number,
+    step: number = 1,
+    partialWindows: boolean = false,
+    transform?: (window: readonly T[]) => R
+  ): Sequence<T[] | R> {
     const source = this.iterator
     return new Sequence(function* () {
       const buffer: T[] = []
@@ -190,18 +258,20 @@ export class Sequence<T> {
         buffer.push(item)
 
         if (buffer.length === size) {
-          yield [...buffer]
+          yield transform ? transform([...buffer]) : [...buffer]
           buffer.splice(0, step)
         }
       }
 
       if (partialWindows && buffer.length > 0) {
-        yield buffer
+        yield transform ? transform(buffer) : buffer
       }
-    })
+    }) as any
   }
 
-  zipWithNext(): Sequence<[T, T]> {
+  zipWithNext(): Sequence<[T, T]>
+  zipWithNext<R>(transform: (a: T, b: T) => R): Sequence<R>
+  zipWithNext<R>(transform?: (a: T, b: T) => R): Sequence<[T, T] | R> {
     const source = this.iterator
     return new Sequence(function* () {
       const iter = source()
@@ -212,11 +282,11 @@ export class Sequence<T> {
       result = iter.next()
 
       while (!result.done) {
-        yield [prev, result.value]
+        yield transform ? transform(prev, result.value) : [prev, result.value]
         prev = result.value
         result = iter.next()
       }
-    })
+    }) as any
   }
 
   zip<U>(other: Iterable<U>): Sequence<[T, U]> {
@@ -303,6 +373,44 @@ export class Sequence<T> {
     return lastValue
   }
 
+  single(predicate?: (value: T) => boolean): T {
+    let result: T | undefined
+    let count = 0
+
+    for (const item of this) {
+      if (!predicate || predicate(item)) {
+        if (count > 0) {
+          throw new Error('Sequence contains more than one matching element')
+        }
+        result = item
+        count++
+      }
+    }
+
+    if (count === 0) {
+      throw new Error('Sequence contains no matching element')
+    }
+
+    return result!
+  }
+
+  singleOrNull(predicate?: (value: T) => boolean): T | null {
+    let result: T | null = null
+    let count = 0
+
+    for (const item of this) {
+      if (!predicate || predicate(item)) {
+        if (count > 0) {
+          return null
+        }
+        result = item
+        count++
+      }
+    }
+
+    return count === 1 ? result : null
+  }
+
   find(predicate: (value: T) => boolean): T | undefined {
     for (const item of this) {
       if (predicate(item)) {
@@ -368,12 +476,32 @@ export class Sequence<T> {
     return this.reduce(operation, initial)
   }
 
+  runningFold<U>(initial: U, operation: (acc: U, value: T) => U): Sequence<U> {
+    const source = this.iterator
+    return new Sequence(function* () {
+      let accumulator = initial
+      yield accumulator
+      for (const item of { [Symbol.iterator]: source }) {
+        accumulator = operation(accumulator, item)
+        yield accumulator
+      }
+    })
+  }
+
+  scan<U>(initial: U, operation: (acc: U, value: T) => U): Sequence<U> {
+    return this.runningFold(initial, operation)
+  }
+
   sum(this: Sequence<number>): number {
     return this.reduce((acc, value) => acc + value, 0)
   }
 
   sumBy(selector: (value: T) => number): number {
     return this.reduce((acc, value) => acc + selector(value), 0)
+  }
+
+  sumOf(selector: (value: T) => number): number {
+    return this.sumBy(selector)
   }
 
   average(this: Sequence<number>): number {

@@ -100,14 +100,14 @@ const fibonacci = generateSequence([0, 1], ([a, b]) => [b, a + b])
   .toArray(); // [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
 
 // Efficient grouping and aggregation
-const summary = asSequence(transactions)
-  .groupBy(t => t.category)
-  .map(([category, items]) => ({
-    category,
-    total: items.sumBy(t => t.amount),
-    count: items.length
-  }))
-  .toArray();`;
+const groups = asSequence(transactions)
+  .groupBy(t => t.category); // Returns Map<string, Transaction[]>
+
+const summary = Array.from(groups).map(([category, items]) => ({
+  category,
+  total: asSequence(items).sumBy(t => t.amount),
+  count: items.length
+}));`;
 
   const monadExample = `import { tryCatch, Success, Failure } from 'kotlinify-ts/monads';
 import { Some, None, fromNullable } from 'kotlinify-ts/monads';

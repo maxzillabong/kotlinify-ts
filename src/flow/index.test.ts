@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { StateFlow, SharedFlow, flowOf, flow } from './index'
-import { delay } from '../coroutines'
+import { delay, CancellationError } from '../coroutines'
 
 describe('Flow', () => {
   describe('flowOf', () => {
     it('creates flow from values', async () => {
       const values: number[] = []
-      await flowOf(1, 2, 3).collect((v) => { values.push(v) })
+      await flowOf(1, 2, 3).collect((v: number) => { values.push(v) })
       expect(values).toEqual([1, 2, 3])
     })
 
     it('creates empty flow', async () => {
       const values: number[] = []
-      await flowOf<number>().collect((v) => { values.push(v) })
+      await flowOf<number>().collect((v: number) => { values.push(v) })
       expect(values).toEqual([])
     })
   })
@@ -26,7 +26,7 @@ describe('Flow', () => {
       })
 
       const values: number[] = []
-      await testFlow.collect((v) => { values.push(v) })
+      await testFlow.collect((v: number) => { values.push(v) })
       expect(values).toEqual([1, 2, 3])
     })
   })
@@ -57,7 +57,7 @@ describe('Flow', () => {
       const values: number[] = []
       await flowOf(1, 2, 3, 4, 5)
         .filter((x) => x % 2 === 0)
-        .collect((v) => { values.push(v) })
+        .collect((v: number) => { values.push(v) })
       expect(values).toEqual([2, 4])
     })
 
@@ -199,7 +199,7 @@ describe('Flow', () => {
         yield 1
         await delay(50)
         yield 2
-        await delay(50)
+        await delay(150)
         yield 3
       })
         .debounce(100)
@@ -208,7 +208,7 @@ describe('Flow', () => {
       await vi.runAllTimersAsync()
       await promise
 
-      expect(values).toEqual([3])
+      expect(values).toEqual([2, 3])
     })
   })
 
@@ -232,6 +232,35 @@ describe('Flow', () => {
     })
   })
 
+  describe('flatMapLatest', () => {
+    it('cancels previous inner flows when new values arrive', async () => {
+      vi.useFakeTimers()
+      const values: number[] = []
+
+      const promise = flow<number>(async (emit) => {
+        await emit(1)
+        await delay(25)
+        await emit(2)
+        await delay(25)
+        await emit(3)
+      })
+        .flatMapLatest((value: number) =>
+          flow<number>(async (emitInner) => {
+            await emitInner(value)
+            await delay(30)
+            await emitInner(value * 10)
+          })
+        )
+        .collect((v: number) => { values.push(v) })
+
+      await vi.runAllTimersAsync()
+      await promise
+      vi.useRealTimers()
+
+      expect(values).toEqual([1, 2, 3, 30])
+    })
+  })
+
   describe('transform', () => {
     it('transforms with custom emit', async () => {
       const values: number[] = []
@@ -242,6 +271,52 @@ describe('Flow', () => {
         })
         .collect((v: number) => { values.push(v) })
       expect(values).toEqual([1, 10, 2, 20, 3, 30])
+    })
+  })
+
+  describe('retry', () => {
+    it('retries upstream until success', async () => {
+      let attempts = 0
+      const values: number[] = []
+
+      await flow<number>(async (emit) => {
+        attempts++
+        await emit(attempts)
+        if (attempts < 3) {
+          throw new Error('boom')
+        }
+      })
+        .retry(2)
+        .collect((v: number) => { values.push(v) })
+
+      expect(values).toEqual([1, 2, 3])
+      expect(attempts).toBe(3)
+    })
+
+    it('propagates cancellation without retrying', async () => {
+      await expect(
+        flow(async (emit) => {
+          await emit(1)
+          throw new CancellationError()
+        })
+          .retry(4)
+          .collect(() => {})
+      ).rejects.toBeInstanceOf(CancellationError)
+    })
+  })
+
+  describe('retryWhen', () => {
+    it('stops when predicate returns false', async () => {
+      let attempts = 0
+      await expect(
+        flow<number>(async (_emit) => {
+          attempts++
+          throw new Error('fail')
+        })
+          .retryWhen((_, attempt) => attempt < 2)
+          .collect(() => {})
+      ).rejects.toThrow('fail')
+      expect(attempts).toBe(3)
     })
   })
 
@@ -340,6 +415,85 @@ describe('Flow', () => {
     it('counts matching values', async () => {
       const count = await flowOf(1, 2, 3, 4, 5).filter((x) => x % 2 === 0).count()
       expect(count).toBe(2)
+    })
+  })
+
+  describe('any and all helpers', () => {
+    it('any without predicate resolves based on emission', async () => {
+      await expect(flowOf(1, 2, 3).any()).resolves.toBe(true)
+      await expect(flowOf<number>().any()).resolves.toBe(false)
+    })
+
+    it('any propagates upstream errors', async () => {
+      await expect(
+        flow(async function* () {
+          throw new Error('boom')
+        }).any()
+      ).rejects.toThrow('boom')
+    })
+
+    it('all short-circuits when predicate fails', async () => {
+      let calls = 0
+      const result = await flowOf(1, 2, 3).all((value) => {
+        calls++
+        return value < 3
+      })
+      expect(result).toBe(false)
+      expect(calls).toBe(3)
+    })
+
+    it('all propagates upstream errors', async () => {
+      await expect(
+        flow(async (emit) => {
+          await emit(1)
+          throw new Error('bad')
+        }).all(() => true)
+      ).rejects.toThrow('bad')
+    })
+  })
+
+  describe('shareIn', () => {
+    it('multicasts values with replay to late subscribers', async () => {
+      vi.useFakeTimers()
+      const shared = flow<number>(async (emit) => {
+        for (const value of [1, 2, 3]) {
+          await emit(value)
+          await delay(10)
+        }
+      }).shareIn({ replay: 1 })
+
+      const values1: number[] = []
+      const first = shared.take(3).collect((v: number) => { values1.push(v) })
+
+      await vi.advanceTimersByTimeAsync(30)
+      await first
+
+      const values2: number[] = []
+      const second = shared.take(1).collect((v: number) => { values2.push(v) })
+
+      await vi.runAllTimersAsync()
+      await second
+      vi.useRealTimers()
+
+      expect(values1).toEqual([1, 2, 3])
+      expect(values2).toEqual([3])
+    })
+
+    it('cancels collectors when upstream fails', async () => {
+      vi.useFakeTimers()
+      const shared = flow<number>(async (emit) => {
+        await emit(1)
+        await delay(10)
+        throw new Error('boom')
+      }).shareIn({ replay: 1 })
+
+      const collection = shared.collect(() => {})
+      collection.catch(() => {})
+
+      await vi.advanceTimersByTimeAsync(10)
+
+      await expect(collection).rejects.toBeInstanceOf(CancellationError)
+      vi.useRealTimers()
     })
   })
 

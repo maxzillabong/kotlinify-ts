@@ -73,17 +73,17 @@ describe('Schedule', () => {
 
     it('should double delay each time with factor 2', () => {
       const schedule = Schedule.exponential<Error>(100, 2)
-      let state = schedule['initial']
+      let state = schedule.initialState
 
-      const d1 = schedule['update'](new Error(), state)
+      const d1 = schedule.advance(new Error(), state)
       expect(d1.delay).toBe(100)
       expect(d1.state).toBe(200)
 
-      const d2 = schedule['update'](new Error(), d1.state)
+      const d2 = schedule.advance(new Error(), d1.state)
       expect(d2.delay).toBe(200)
       expect(d2.state).toBe(400)
 
-      const d3 = schedule['update'](new Error(), d2.state)
+      const d3 = schedule.advance(new Error(), d2.state)
       expect(d3.delay).toBe(400)
       expect(d3.state).toBe(800)
     })
@@ -92,11 +92,11 @@ describe('Schedule', () => {
   describe('fibonacci', () => {
     it('should use fibonacci sequence for delays', () => {
       const schedule = Schedule.fibonacci<Error>(100)
-      let state = schedule['initial']
+      let state = schedule.initialState
 
       const decisions = []
       for (let i = 0; i < 7; i++) {
-        const decision = schedule['update'](new Error(), state)
+        const decision = schedule.advance(new Error(), state)
         decisions.push(decision.delay)
         state = decision.state
       }
@@ -108,10 +108,10 @@ describe('Schedule', () => {
   describe('spaced', () => {
     it('should use constant delay', () => {
       const schedule = Schedule.spaced<Error>(500)
-      let state = schedule['initial']
+      let state = schedule.initialState
 
       for (let i = 0; i < 5; i++) {
-        const decision = schedule['update'](new Error(), state)
+        const decision = schedule.advance(new Error(), state)
         expect(decision.delay).toBe(500)
         state = decision.state
       }
@@ -121,17 +121,17 @@ describe('Schedule', () => {
   describe('linear', () => {
     it('should increase delay linearly', () => {
       const schedule = Schedule.linear<Error>(100)
-      let state = schedule['initial']
+      let state = schedule.initialState
 
-      const d1 = schedule['update'](new Error(), state)
+      const d1 = schedule.advance(new Error(), state)
       expect(d1.delay).toBe(100)
       expect(d1.state).toBe(200)
 
-      const d2 = schedule['update'](new Error(), d1.state)
+      const d2 = schedule.advance(new Error(), d1.state)
       expect(d2.delay).toBe(200)
       expect(d2.state).toBe(300)
 
-      const d3 = schedule['update'](new Error(), d2.state)
+      const d3 = schedule.advance(new Error(), d2.state)
       expect(d3.delay).toBe(300)
       expect(d3.state).toBe(400)
     })
@@ -140,8 +140,8 @@ describe('Schedule', () => {
   describe('identity', () => {
     it('should return the input as state', () => {
       const schedule = Schedule.identity<string>()
-      const decision = schedule['update']('hello', '')
-      expect(decision.state).toBe('hello')
+      const decision = schedule.advance('hello', undefined)
+      expect(decision.output).toBe('hello')
       expect(decision.delay).toBe(0)
       expect(decision.cont).toBe(true)
     })
@@ -197,11 +197,11 @@ describe('Schedule', () => {
       const s2 = Schedule.recurs<Error>(3)
       const combined = s1.and(s2)
 
-      let state = combined['initial']
+      let state = combined.initialState
       let decisions = 0
 
       while (true) {
-        const decision = combined['update'](new Error(), state)
+        const decision = combined.advance(new Error(), state)
         if (!decision.cont) break
         decisions++
         state = decision.state
@@ -217,11 +217,11 @@ describe('Schedule', () => {
       const s2 = Schedule.recurs<Error>(3)
       const combined = s1.or(s2)
 
-      let state = combined['initial']
+      let state = combined.initialState
       let decisions = 0
 
       while (true) {
-        const decision = combined['update'](new Error(), state)
+        const decision = combined.advance(new Error(), state)
         if (!decision.cont) break
         decisions++
         state = decision.state
@@ -295,9 +295,9 @@ describe('Schedule', () => {
   describe('jittered', () => {
     it('should add random jitter to delays', () => {
       const schedule = Schedule.exponential<Error>(1000).jittered(0.2)
-      let state = schedule['initial']
+      let state = schedule.initialState
 
-      const decision = schedule['update'](new Error(), state)
+      const decision = schedule.advance(new Error(), state)
 
       expect(decision.delay).toBeGreaterThanOrEqual(1000)
       expect(decision.delay).toBeLessThanOrEqual(1200)
@@ -385,10 +385,10 @@ describe('Schedule', () => {
           if (count === 2) throw new Error('Failed at 2')
           return count
         },
-        (error, state) => `Error: ${(error as Error).message}, State: ${state}`
+        (error, lastOutput) => `Error: ${(error as Error).message}, Last: ${lastOutput}`
       )
 
-      expect(result).toBe('Error: Failed at 2, State: 1')
+      expect(result).toBe('Error: Failed at 2, Last: 0')
     })
   })
 
@@ -415,11 +415,11 @@ describe('Schedule', () => {
       const s2 = Schedule.recurs<Error>(5)
       const combined = s1.and(s2)
 
-      let state = combined['initial']
+      let state = combined.initialState
       let maxDelay = 0
 
       for (let i = 0; i < 5; i++) {
-        const decision = combined['update'](new Error(), state)
+        const decision = combined.advance(new Error(), state)
         maxDelay = Math.max(maxDelay, decision.delay)
         state = decision.state
       }

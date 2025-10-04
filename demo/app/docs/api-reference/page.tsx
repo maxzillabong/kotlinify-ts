@@ -276,19 +276,27 @@ first([1, 2, 3], x => x > 1);
 
             <div className="bg-white/5 border border-white/10 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-slate-400 mb-2">
-                groupBy&lt;T, K&gt;(array: T[], keySelector: (value: T) =&gt; K): Record&lt;K, T[]&gt;
+                groupBy&lt;T, K&gt;(array: T[], keySelector: (value: T) =&gt; K): Map&lt;K, T[]&gt;
               </h3>
               <p className="text-gray-300 mb-4">
-                Groups elements by the key returned by the given keySelector function.
+                Groups elements by the key returned by the given keySelector function. Returns a Map for type safety.
               </p>
               <CodeBlock
                 code={`import { groupBy } from 'kotlinify-ts/collections';
 
-groupBy(
+const groups = groupBy(
   [{ age: 20 }, { age: 30 }, { age: 20 }],
   x => x.age
 );
-// { 20: [{ age: 20 }, { age: 20 }], 30: [{ age: 30 }] }`}
+// Map { 20 => [{ age: 20 }, { age: 20 }], 30 => [{ age: 30 }] }
+
+// Access groups using Map methods
+groups.get(20); // [{ age: 20 }, { age: 20 }]
+
+// Iterate over groups
+for (const [age, items] of groups) {
+  console.log(\`Age \${age}: \${items.length} items\`);
+}`}
                 language="typescript"
               />
             </div>
