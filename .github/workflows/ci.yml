@@ -28,7 +28,7 @@ jobs:
         run: npm run typecheck
 
       - name: Run unit tests
-        run: npm run test -- --run
+        run: npm run test
 
       - name: Build library
         run: npm run build
