@@ -249,14 +249,8 @@ console.log('Result:', result);`}
             </div>
 
             <CodeBlock
-              code={`import { asScope, apply } from 'kotlinify-ts/scope';
-
-// Method 1: Use asScope() for chaining
+              code={`// Use asScope() for chaining
 const user = asScope({})
-  .apply(u => {
-    u.id = generateId();
-    u.createdAt = new Date();
-  })
   .apply(u => {
     u.name = 'John Doe';
     u.email = 'john@example.com';
@@ -267,27 +261,9 @@ const user = asScope({})
   })
   .value();
 
-// Method 2: Use standalone function
-const canvas = apply(document.createElement('canvas'), c => {
-  c.width = 800;
-  c.height = 600;
-  c.style.border = '1px solid black';
-  c.getContext('2d')?.fillRect(0, 0, 100, 100);
-});
+console.log('User:', user);
 
-// Method 3: With prototype extensions
-import { enableKotlinifyExtensions } from 'kotlinify-ts/scope';
-enableKotlinifyExtensions();
-
-// Real-world: Building complex configurations
-const server = { host: '', port: 0, ssl: false }
-  .apply(config => {
-    config.host = process.env.HOST || 'localhost';
-    config.port = parseInt(process.env.PORT || '3000');
-    config.ssl = process.env.NODE_ENV === 'production';
-  });
-
-// Combine apply with let using asScope()
+// Combine apply with let
 const jsonConfig = asScope({ database: {} })
   .apply(cfg => {
     cfg.database.host = 'localhost';
@@ -297,21 +273,9 @@ const jsonConfig = asScope({ database: {} })
   .let(cfg => JSON.stringify(cfg, null, 2))
   .value();
 
-// Chain multiple apply calls for organized configuration
-const component = asScope(createComponent())
-  .apply(c => { // Set dimensions
-    c.width = 300;
-    c.height = 200;
-  })
-  .apply(c => { // Set styling
-    c.style = { background: 'blue', border: '1px solid' };
-  })
-  .apply(c => { // Set behavior
-    c.onClick = handleClick;
-    c.onHover = handleHover;
-  })
-  .value();`}
+console.log('Config:', jsonConfig);`}
               language="typescript"
+              executable={true}
             />
 
             <h4 className="text-lg font-semibold text-foreground mt-6 mb-3">Try it yourself:</h4>
@@ -358,52 +322,20 @@ console.log(settings);`}
             </div>
 
             <CodeBlock
-              code={`import { asScope, also } from 'kotlinify-ts/scope';
+              code={`// Use also for side effects (logging, debugging)
+const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-// Method 1: Use asScope() for chaining
-const result = asScope(computeExpensiveValue())
-  .also(v => console.time('processing'))
-  .let(v => heavyTransformation(v))
-  .also(v => console.timeEnd('processing'))
-  .also(v => cache.set(cacheKey, v))
-  .also(v => metrics.recordComputation(v))
-  .let(v => formatForDisplay(v))
+const result = asScope(data)
+  .also(arr => console.log('Original:', arr.length, 'items'))
+  .let(arr => arr.filter(x => x % 2 === 0))
+  .also(arr => console.log('After filter:', arr.length, 'items'))
+  .let(arr => arr.map(x => x * 2))
+  .also(arr => console.log('After map:', arr))
   .value();
 
-// Method 2: Use standalone function
-const validated = also(generatePassword(), pwd => {
-  if (pwd.length < 12) throw new Error('Password too short');
-  if (!/[A-Z]/.test(pwd)) throw new Error('Must contain uppercase');
-  if (!/[0-9]/.test(pwd)) throw new Error('Must contain number');
-});
-
-// Method 3: With prototype extensions
-import { enableKotlinifyExtensions } from 'kotlinify-ts/scope';
-enableKotlinifyExtensions();
-
-// Validation chain - clean and readable
-const securePassword = generatePassword()
-  .also(pwd => {
-    if (pwd.length < 12) throw new Error('Password too short');
-  })
-  .also(pwd => {
-    if (!/[A-Z]/.test(pwd)) throw new Error('Must contain uppercase');
-  })
-  .also(pwd => {
-    if (!/[0-9]/.test(pwd)) throw new Error('Must contain number');
-  })
-  .also(pwd => auditLog.record('password_generated'));
-
-// Real-world: Track data through processing pipeline
-const processedData = asScope(fetchData(url))
-  .also(data => console.log('[DEBUG] Fetched:', data.length, 'items'))
-  .also(data => analytics.track('data_fetched', { count: data.length }))
-  .let(data => data.filter(item => item.active))
-  .also(filtered => console.log('[DEBUG] After filter:', filtered.length))
-  .let(data => data.map(transform))
-  .also(final => metrics.record('pipeline_complete', final))
-  .value();`}
+console.log('Final result:', result);`}
               language="typescript"
+              executable={true}
             />
           </div>
         </DocsSection>
@@ -423,10 +355,10 @@ const processedData = asScope(fetchData(url))
             </div>
 
             <CodeBlock
-              code={`import { asScope, run } from 'kotlinify-ts/scope';
+              code={`// Use run for calculations with 'this' context
+const metrics = { views: 1000, clicks: 50, conversions: 10 };
 
-// Method 1: Use asScope() for chaining
-const report = asScope(getUserMetrics())
+const report = asScope(metrics)
   .run(function() {
     return {
       total: this.views + this.clicks,
@@ -434,29 +366,25 @@ const report = asScope(getUserMetrics())
       quality: this.conversions / this.clicks
     };
   })
-  .let(metrics => formatReport(metrics))
   .value();
 
-// Method 2: Use standalone function
-const area = run({ width: 10, height: 20 }, function() {
-  return this.width * this.height;
-});
+console.log('Report:', report);
 
-// Method 3: With prototype extensions
-import { enableKotlinifyExtensions } from 'kotlinify-ts/scope';
-enableKotlinifyExtensions();
-
-// Building and configuring DOM elements
-const element = document.createElement('div')
+// Calculate area with run
+const dimensions = { width: 10, height: 20 };
+const area = asScope(dimensions)
   .run(function() {
-    this.innerHTML = '<h1>Title</h1><p>Content</p>';
-    this.className = 'card';
-    this.style.padding = '20px';
-    return this;
+    return this.width * this.height;
   })
-  .also(el => document.body.appendChild(el));
+  .value();
 
-// Real-world: Complex calculations with context
+console.log('Area:', area);`}
+              language="typescript"
+              executable={true}
+            />
+
+            <CodeBlock
+              code={`// Real-world: Complex calculations with context
 const summary = asScope(fetchUserStats(userId))
   .run(function() {
     const total = this.posts + this.comments + this.likes;
