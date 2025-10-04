@@ -247,7 +247,7 @@ export function chunked<T, R>(
   }
 
   const step = stepOrTransform ?? size
-  const partial = partialWindows ?? false
+  const partial = partialWindows ?? (stepOrTransform === undefined ? true : false)
   const chunks: T[][] = []
 
   for (let i = 0; i < array.length; i += step) {
