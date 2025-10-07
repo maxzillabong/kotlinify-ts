@@ -59,7 +59,6 @@ export {
 export * from './coroutines'
 export * from './channels'
 export { Flow, flow, flowOf, zip as zipFlows } from './flow'
-export * from './extensions'
 export * from './monads'
 export { Sequence, sequenceOf, asSequence, generateSequence } from './sequences'
 export { repeat, repeatAsync } from './utils'

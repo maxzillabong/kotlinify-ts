@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X, Target, Zap, Waves, RefreshCw, Shield, Package, BookOpen, Smartphone, Server, Type, Hash, Clock, Repeat, CheckCircle2, Wrench, Puzzle } from "lucide-react";
+import { Menu, X, Target, Zap, Waves, RefreshCw, Shield, Package, BookOpen, Smartphone, Server, Type, Hash, Clock, Repeat, CheckCircle2, Wrench } from "lucide-react";
 import { LogoMark } from "@/components/LogoMark";
 
 const navigation = [
@@ -20,7 +20,6 @@ const navigation = [
       { name: "Collections", href: "/docs/collections", icon: Package },
       { name: "Coroutines", href: "/docs/coroutines", icon: RefreshCw },
       { name: "Duration", href: "/docs/duration", icon: Clock },
-      { name: "Extensions", href: "/docs/extensions", icon: Puzzle },
       { name: "Flow Streams", href: "/docs/flow", icon: Waves },
       { name: "Lazy Sequences", href: "/docs/sequences", icon: Zap },
       { name: "Ranges", href: "/docs/ranges", icon: Hash },

@@ -6,13 +6,12 @@ export function takeUnless<T>(value: T, predicate: (value: T) => boolean): T | u
   return predicate(value) ? undefined : value
 }
 
-export function orEmpty(value: string | null | undefined): string
-export function orEmpty<T>(value: T[] | null | undefined): T[]
-export function orEmpty(value: any): any {
-  if (value === null || value === undefined) {
-    return Array.isArray(value) ? [] : ''
-  }
-  return value
+export function orEmpty(value: string | null | undefined): string {
+  return value ?? ''
+}
+
+export function orEmptyArray<T>(value: T[] | null | undefined): T[] {
+  return value ?? []
 }
 
 export function isNullOrEmpty(value: string | null | undefined): boolean

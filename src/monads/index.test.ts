@@ -2,10 +2,12 @@ import { describe, it, expect, vi } from 'vitest'
 import {
   Some,
   None,
+  Option,
   Left,
   Right,
   Success,
   Failure,
+  Result,
   zipOrAccumulate,
 } from './index'
 
@@ -121,6 +123,33 @@ describe('Option', () => {
         (x) => `some ${x}`
       )
       expect(result).toBe('none')
+    })
+  })
+
+  describe('Option.fromNullable', () => {
+    it('creates Some from non-null value', () => {
+      const result = Option.fromNullable(42)
+      expect(result.isSome).toBe(true)
+      expect(result.get()).toBe(42)
+    })
+
+    it('creates None from null', () => {
+      const result = Option.fromNullable(null)
+      expect(result.isNone).toBe(true)
+    })
+
+    it('creates None from undefined', () => {
+      const result = Option.fromNullable(undefined)
+      expect(result.isNone).toBe(true)
+    })
+
+    it('correctly types non-null values', () => {
+      const value: string | null = 'hello'
+      const result = Option.fromNullable(value)
+      if (result.isSome) {
+        const typed: string = result.get()
+        expect(typed).toBe('hello')
+      }
     })
   })
 
@@ -406,6 +435,31 @@ describe('Result', () => {
       const either = Failure<number, string>('error').toEither()
       expect(either.isLeft).toBe(true)
       expect(either.getLeft()).toBe('error')
+    })
+  })
+
+  describe('Result.of', () => {
+    it('creates Success from successful thunk', () => {
+      const result = Result.of(() => 42)
+      expect(result.isSuccess).toBe(true)
+      expect(result.get()).toBe(42)
+    })
+
+    it('creates Failure from throwing thunk', () => {
+      const result = Result.of(() => {
+        throw new Error('test error')
+      })
+      expect(result.isFailure).toBe(true)
+      expect(result.getError()).toBeInstanceOf(Error)
+      expect(result.getError().message).toBe('test error')
+    })
+
+    it('captures non-Error throws as Error', () => {
+      const result = Result.of(() => {
+        throw 'string error'
+      })
+      expect(result.isFailure).toBe(true)
+      expect(result.getError()).toBeInstanceOf(Error)
     })
   })
 

@@ -325,6 +325,93 @@ describe('Sequence', () => {
     })
   })
 
+  describe('laziness and short-circuit behavior', () => {
+    it('take only processes needed elements', () => {
+      let hits = 0
+      const seq = Sequence.generate(() => ++hits).map((x) => x * 2).take(3)
+
+      const result = [...seq]
+
+      expect(result).toEqual([2, 4, 6])
+      expect(hits).toBe(3)
+    })
+
+    it('any short-circuits on first match', () => {
+      let hits = 0
+      const found = asSequence([1, 2, 3, 4, 5])
+        .onEach(() => hits++)
+        .any((x) => x === 2)
+
+      expect(found).toBe(true)
+      expect(hits).toBe(2)
+    })
+
+    it('filter and first combination short-circuits', () => {
+      let hits = 0
+      const result = asSequence([1, 2, 3, 4, 5])
+        .onEach(() => hits++)
+        .filter((x) => x > 2)
+        .first()
+
+      expect(result).toBe(3)
+      expect(hits).toBe(3)
+    })
+
+    it('find short-circuits on match', () => {
+      let hits = 0
+      const result = asSequence([1, 2, 3, 4, 5])
+        .onEach(() => hits++)
+        .find((x) => x === 3)
+
+      expect(result).toBe(3)
+      expect(hits).toBe(3)
+    })
+
+    it('takeWhile short-circuits on first false', () => {
+      let hits = 0
+      const seq = asSequence([1, 2, 3, 4, 5])
+        .onEach(() => hits++)
+        .takeWhile((x) => x < 3)
+
+      const result = seq.toArray()
+
+      expect(result).toEqual([1, 2])
+      expect(hits).toBe(3)
+    })
+
+    it('chained operations remain lazy until terminal operation', () => {
+      const mapFn = vi.fn((x: number) => x * 2)
+      const filterFn = vi.fn((x: number) => x > 5)
+
+      const seq = sequenceOf(1, 2, 3, 4, 5)
+        .map(mapFn)
+        .filter(filterFn)
+
+      expect(mapFn).not.toHaveBeenCalled()
+      expect(filterFn).not.toHaveBeenCalled()
+
+      const result = seq.toArray()
+
+      expect(result).toEqual([6, 8, 10])
+      expect(mapFn).toHaveBeenCalledTimes(5)
+      expect(filterFn).toHaveBeenCalledTimes(5)
+    })
+
+    it('map and take combination proves laziness', () => {
+      let mapHits = 0
+      const result = asSequence([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        .map((x) => {
+          mapHits++
+          return x * 2
+        })
+        .take(3)
+        .toArray()
+
+      expect(result).toEqual([2, 4, 6])
+      expect(mapHits).toBe(3)
+    })
+  })
+
   describe('all', () => {
     it('returns true if all match', () => {
       expect(sequenceOf(2, 4, 6).all((x) => x % 2 === 0)).toBe(true)

@@ -7,6 +7,10 @@ export abstract class Option<T> {
   abstract getOrElse(defaultValue: T | (() => T)): T
   abstract getOrThrow(error?: Error): T
 
+  static fromNullable<T>(value: T | null | undefined): Option<NonNullable<T>> {
+    return value != null ? Some(value as NonNullable<T>) : None()
+  }
+
   map<U>(fn: (value: T) => U): Option<U> {
     return this.isSome ? Some((fn as any)(this.get())) : None()
   }
@@ -61,12 +65,12 @@ export abstract class Option<T> {
     return this.map(fn)
   }
 
-  also(fn: (value: T) => void): Option<T> {
+  also(fn: (value: T) => void): this {
     if (this.isSome) fn(this.get())
     return this
   }
 
-  apply(fn: (value: T) => void): Option<T> {
+  apply(fn: (value: T) => void): this {
     if (this.isSome) fn(this.get())
     return this
   }
@@ -195,12 +199,12 @@ export abstract class Either<L, R> {
     return this.map(fn)
   }
 
-  also(fn: (value: R) => void): Either<L, R> {
+  also(fn: (value: R) => void): this {
     if (this.isRight) fn(this.getRight())
     return this
   }
 
-  apply(fn: (value: R) => void): Either<L, R> {
+  apply(fn: (value: R) => void): this {
     if (this.isRight) fn(this.getRight())
     return this
   }
@@ -280,6 +284,14 @@ export abstract class Result<T, E = Error> {
   abstract getError(): E
   abstract getErrorOrNull(): E | null
 
+  static of<T>(thunk: () => T): Result<T, Error> {
+    try {
+      return Success(thunk())
+    } catch (e) {
+      return Failure(e instanceof Error ? e : new Error(String(e)))
+    }
+  }
+
   map<U>(fn: (value: T) => U): Result<U, E> {
     return this.isSuccess ? Success(fn(this.get())) : (this as any)
   }
@@ -304,12 +316,12 @@ export abstract class Result<T, E = Error> {
     return this.isFailure ? fn(this.getError()) : this
   }
 
-  onSuccess(fn: (value: T) => void): Result<T, E> {
+  onSuccess(fn: (value: T) => void): this{
     if (this.isSuccess) fn(this.get())
     return this
   }
 
-  onFailure(fn: (error: E) => void): Result<T, E> {
+  onFailure(fn: (error: E) => void): this {
     if (this.isFailure) fn(this.getError())
     return this
   }
@@ -326,11 +338,11 @@ export abstract class Result<T, E = Error> {
     return this.map(fn)
   }
 
-  also(fn: (value: T) => void): Result<T, E> {
+  also(fn: (value: T) => void): this {
     return this.onSuccess(fn)
   }
 
-  apply(fn: (value: T) => void): Result<T, E> {
+  apply(fn: (value: T) => void): this {
     return this.onSuccess(fn)
   }
 }
@@ -506,14 +518,14 @@ export function mapOrAccumulate<E, A, B>(
   const results: B[] = []
   const errors: E[] = []
 
-  items.forEach((item) => {
+  for (const item of items) {
     const result = fn(item)
     if (result.isRight) {
       results.push(result.getRight())
     } else {
       errors.push(result.getLeft())
     }
-  })
+  }
 
   return errors.length > 0
     ? Left(NonEmptyList.of(errors[0], ...errors.slice(1)))

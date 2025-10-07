@@ -180,6 +180,36 @@ describe('Flow', () => {
       expect(errors).toHaveLength(1)
       expect(errors[0].message).toBe('test error')
     })
+
+    it('works with onCompletion - both run on error', async () => {
+      let completed = false
+      let caught = false
+
+      await flow<number>(async function* () {
+        yield 1
+        throw new Error('boom')
+      })
+        .catch(() => { caught = true })
+        .onCompletion(() => { completed = true })
+        .collect(() => {})
+
+      expect(caught).toBe(true)
+      expect(completed).toBe(true)
+    })
+
+    it('onCompletion runs after catch handler', async () => {
+      const order: string[] = []
+
+      await flow<number>(async function* () {
+        yield 1
+        throw new Error('boom')
+      })
+        .catch(() => { order.push('catch') })
+        .onCompletion(() => { order.push('complete') })
+        .collect(() => {})
+
+      expect(order).toEqual(['catch', 'complete'])
+    })
   })
 
   describe('debounce', () => {
