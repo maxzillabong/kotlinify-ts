@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/maxzillabong/kotlinify-ts/compare/v1.0.0...v1.1.0) (2025-10-10)
+
+
+### Features
+
+* **resilience:** expose resilience package ([3af5a85](https://github.com/maxzillabong/kotlinify-ts/commit/3af5a856361294da04ab6bc6eede4e6a3daca8f9))
+
 # 1.0.0 (2025-10-04)
 
 
