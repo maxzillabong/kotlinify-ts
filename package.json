@@ -58,6 +58,11 @@
       "types": "./dist/duration.d.ts",
       "import": "./dist/duration.mjs",
       "require": "./dist/duration.js"
+    },
+    "./resilience": {
+      "types": "./dist/resilience.d.ts",
+      "import": "./dist/resilience.mjs",
+      "require": "./dist/resilience.js"
     }
   },
   "files": [

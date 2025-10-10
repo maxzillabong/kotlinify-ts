@@ -12,6 +12,7 @@ export default defineConfig({
     strings: 'src/strings/index.ts',
     ranges: 'src/ranges/index.ts',
     duration: 'src/duration/index.ts',
+    resilience: 'src/resilience/index.ts',
   },
   format: ['cjs', 'esm', 'iife'],
   dts: true,

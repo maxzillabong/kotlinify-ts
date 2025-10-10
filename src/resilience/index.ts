@@ -1,4 +1,29 @@
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+const normalizeDelay = (value: number) =>
+  Number.isFinite(value) && value > 0 ? value : 0
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, normalizeDelay(ms)))
+
+const supportsSyncDelay =
+  typeof Atomics === 'object' &&
+  typeof Atomics.wait === 'function' &&
+  typeof SharedArrayBuffer === 'function'
+
+const syncDelayArray = supportsSyncDelay ? new Int32Array(new SharedArrayBuffer(4)) : undefined
+
+const sleepSync = (ms: number) => {
+  const delay = normalizeDelay(ms)
+
+  if (delay <= 0) {
+    return
+  }
+
+  if (!syncDelayArray) {
+    throw new Error('Synchronous delays require Atomics.wait support')
+  }
+
+  Atomics.wait(syncDelayArray, 0, 0, delay)
+}
 
 export type ScheduleDecision<State, Output> = {
   cont: boolean
@@ -127,11 +152,12 @@ export class Schedule<Input, State, Output> {
       () => this.initialFactory(),
       (input, state) => {
         const decision = this.step(input, state)
+        const baseDelay = normalizeDelay(decision.delay)
         const fraction = Math.max(0, Math.min(1, rng()))
-        const jitter = decision.delay * maxFactor * fraction
+        const jitter = baseDelay * Math.max(0, maxFactor) * fraction
         return {
           cont: decision.cont,
-          delay: Math.max(0, decision.delay + jitter),
+          delay: baseDelay + jitter,
           state: decision.state,
           output: decision.output,
         }
@@ -154,8 +180,10 @@ export class Schedule<Input, State, Output> {
 
         state = decision.state
 
-        if (decision.delay > 0) {
-          await sleep(decision.delay)
+        const delay = normalizeDelay(decision.delay)
+
+        if (delay > 0) {
+          await sleep(delay)
         }
       }
     }
@@ -174,8 +202,10 @@ export class Schedule<Input, State, Output> {
 
       state = decision.state
 
-      if (decision.delay > 0) {
-        await sleep(decision.delay)
+      const delay = normalizeDelay(decision.delay)
+
+      if (delay > 0) {
+        await sleep(delay)
       }
     }
   }
@@ -199,8 +229,10 @@ export class Schedule<Input, State, Output> {
 
         state = decision.state
 
-        if (decision.delay > 0) {
-          await sleep(decision.delay)
+        const delay = normalizeDelay(decision.delay)
+
+        if (delay > 0) {
+          await sleep(delay)
         }
       }
     } catch (error) {
@@ -221,11 +253,10 @@ export class Schedule<Input, State, Output> {
 
       state = decision.state
 
-      if (decision.delay > 0) {
-        const end = Date.now() + decision.delay
-        while (Date.now() < end) {
-          /* busy wait */
-        }
+      const delay = normalizeDelay(decision.delay)
+
+      if (delay > 0) {
+        sleepSync(delay)
       }
     }
   }
@@ -245,11 +276,10 @@ export class Schedule<Input, State, Output> {
 
         state = decision.state
 
-        if (decision.delay > 0) {
-          const end = Date.now() + decision.delay
-          while (Date.now() < end) {
-            /* busy wait */
-          }
+        const delay = normalizeDelay(decision.delay)
+
+        if (delay > 0) {
+          sleepSync(delay)
         }
       }
     }
