@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/maxzillabong/kotlinify-ts/compare/v1.1.0...v1.1.1) (2025-10-12)
+
+
+### Bug Fixes
+
+* stabilize async primitives and docs ([12662f7](https://github.com/maxzillabong/kotlinify-ts/commit/12662f78a5ee0557b8c28dafed8d25cb396dc68d))
+
 # [1.1.0](https://github.com/maxzillabong/kotlinify-ts/compare/v1.0.0...v1.1.0) (2025-10-10)
 
 
