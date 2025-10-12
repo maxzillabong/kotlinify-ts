@@ -56,6 +56,14 @@ export interface ScopeChain<T> {
   value(): T
 }
 
+export interface AsyncScopeChain<T> {
+  let<R>(block: (value: T) => R | Promise<R>): AsyncScopeChain<Awaited<R>>
+  apply(block: (value: T) => void | Promise<void>): AsyncScopeChain<T>
+  also(block: (value: T) => void | Promise<void>): AsyncScopeChain<T>
+  run<R>(block: (this: T) => R | Promise<R>): AsyncScopeChain<Awaited<R>>
+  value(): Promise<T>
+}
+
 class ScopeChainImpl<T> implements ScopeChain<T> {
   constructor(private _value: T) {}
 
@@ -80,9 +88,45 @@ class ScopeChainImpl<T> implements ScopeChain<T> {
   }
 }
 
-export function asScope<T>(value: T | Promise<T>): ScopeChain<Awaited<T>> {
-  if (value instanceof Promise) {
-    return new ScopeChainImpl(value as Awaited<T>)
+class AsyncScopeChainImpl<T> implements AsyncScopeChain<T> {
+  constructor(private readonly promise: Promise<T>) {}
+
+  let<R>(block: (value: T) => R | Promise<R>): AsyncScopeChain<Awaited<R>> {
+    const next = this.promise.then((value) => Promise.resolve(block(value)))
+    return new AsyncScopeChainImpl<Awaited<R>>(Promise.resolve(next))
   }
-  return new ScopeChainImpl(value as Awaited<T>)
+
+  apply(block: (value: T) => void | Promise<void>): AsyncScopeChain<T> {
+    const next = this.promise.then(async (value) => {
+      await block(value)
+      return value
+    })
+    return new AsyncScopeChainImpl<T>(next)
+  }
+
+  also(block: (value: T) => void | Promise<void>): AsyncScopeChain<T> {
+    const next = this.promise.then(async (value) => {
+      await block(value)
+      return value
+    })
+    return new AsyncScopeChainImpl<T>(next)
+  }
+
+  run<R>(block: (this: T) => R | Promise<R>): AsyncScopeChain<Awaited<R>> {
+    const next = this.promise.then((value) => Promise.resolve(block.call(value)))
+    return new AsyncScopeChainImpl<Awaited<R>>(Promise.resolve(next))
+  }
+
+  value(): Promise<T> {
+    return this.promise
+  }
+}
+
+export function asScope<T>(value: Promise<T>): AsyncScopeChain<T>
+export function asScope<T>(value: T): ScopeChain<T>
+export function asScope<T>(value: T | Promise<T>): ScopeChain<T> | AsyncScopeChain<T> {
+  if (value instanceof Promise) {
+    return new AsyncScopeChainImpl(Promise.resolve(value))
+  }
+  return new ScopeChainImpl(value)
 }

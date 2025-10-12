@@ -71,6 +71,12 @@ export class Channel<T> implements SendChannel<T>, ReceiveChannel<T> {
       return value
     }
 
+    if (this.senders.length > 0) {
+      const { value, resolve } = this.senders.shift()!
+      resolve()
+      return value
+    }
+
     if (this._closed) {
       throw new Error('Channel is closed for receive')
     }
@@ -198,17 +204,22 @@ export async function consumeEach<T>(
 }
 
 export function ticker(delayMs: number, initialDelayMs: number = delayMs): ReceiveChannel<number> {
+  const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, Math.max(0, ms)))
+
   return produce(async (channel) => {
     let tick = 0
-    await new Promise((resolve) => setTimeout(resolve, initialDelayMs))
-    await channel.send(tick++)
 
-    const interval = setInterval(async () => {
-      try {
+    try {
+      await wait(initialDelayMs)
+
+      while (true) {
         await channel.send(tick++)
-      } catch (error) {
-        clearInterval(interval)
+        await wait(delayMs)
       }
-    }, delayMs)
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== 'Channel is closed for send') {
+        throw error
+      }
+    }
   })
 }

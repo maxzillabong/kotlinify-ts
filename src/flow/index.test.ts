@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { StateFlow, SharedFlow, flowOf, flow } from './index'
+import { StateFlow, SharedFlow, Flow, flowOf, flow } from './index'
 import { delay, CancellationError } from '../coroutines'
 
 describe('Flow', () => {
@@ -13,6 +13,28 @@ describe('Flow', () => {
     it('creates empty flow', async () => {
       const values: number[] = []
       await flowOf<number>().collect((v: number) => { values.push(v) })
+      expect(values).toEqual([])
+    })
+  })
+
+  describe('Flow.from', () => {
+    it('creates flow from array', async () => {
+      const values: number[] = []
+      await Flow.from([1, 2, 3]).collect((v: number) => { values.push(v) })
+      expect(values).toEqual([1, 2, 3])
+    })
+
+    it('creates flow from empty array', async () => {
+      const values: number[] = []
+      await Flow.from<number>([]).collect((v: number) => { values.push(v) })
+      expect(values).toEqual([])
+    })
+  })
+
+  describe('Flow.empty', () => {
+    it('creates empty flow', async () => {
+      const values: number[] = []
+      await Flow.empty<number>().collect((v: number) => { values.push(v) })
       expect(values).toEqual([])
     })
   })

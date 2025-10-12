@@ -31,7 +31,8 @@ const config = apply({} as any, cfg => {
 });
 
 // Track operations with side effects in a clean chain
-const processedData = asScope(fetchData())
+// Works seamlessly with async data sources too
+const processedData = await asScope(fetchData())
   .let(data => data.filter(item => item.active))
   .also(filtered => console.log(\`Processing \${filtered.length} items\`))
   .let(items => items.map(item => item.value))
@@ -204,7 +205,7 @@ return null;`} language="typescript" />
                 <span className="text-xl">✅</span> With Kotlinify
               </h3>
               <CodeBlock code={`// Clean, chainable, functional - ONE beautiful expression!
-asScope(fetchData())
+await asScope(fetchData())
   .letOrNull(data => data?.filter(x => x.active))
   .also(d => d && console.log(\`Processing \${d.length}\`))
   .letOrNull(d => d?.map(x => x.value))

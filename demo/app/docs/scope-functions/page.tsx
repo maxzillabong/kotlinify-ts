@@ -64,7 +64,7 @@ return formatted;`}
                 <CodeBlock
                   code={`import { asScope } from 'kotlinify-ts/scope';
 
-return asScope(fetchUser(id))
+return await asScope(fetchUser(id))
   .apply(u => {
     if (u.profile.settings.theme === 'dark') {
       applyDarkMode();
@@ -194,13 +194,13 @@ const result = (5)
   .let(x => "Result: " + x);
 
 // Real-world: API response processing
-const displayName = asScope(fetchUserProfile(id))
+const displayName = await asScope(fetchUserProfile(id))
   .let(profile => profile.firstName + " " + profile.lastName)
   .let(fullName => fullName.trim() || "Anonymous")
   .value();
 
 // Chain through async operations
-const processed = asScope(fetchData())
+const processed = await asScope(fetchData())
   .let(response => response.json())
   .let(data => data.items)
   .let(items => items.filter(i => i.active))
@@ -385,7 +385,7 @@ console.log('Area:', area);`}
 
             <CodeBlock
               code={`// Real-world: Complex calculations with context
-const summary = asScope(fetchUserStats(userId))
+const summary = await asScope(fetchUserStats(userId))
   .run(function() {
     const total = this.posts + this.comments + this.likes;
     const average = total / 3;
@@ -555,7 +555,7 @@ const processed = getUserInput()
               code={`import { asScope } from 'kotlinify-ts/scope';
 
 // Clean, readable data processing pipeline
-const apiResult = asScope(fetchRawData())
+const apiResult = await asScope(fetchRawData())
   .let(raw => parseJSON(raw))
   .also(data => console.log('Parsed:', data))
   .let(data => validateSchema(data))
@@ -582,7 +582,7 @@ const processedData = asScope(rawData)
   .value();
 
 // Async pipeline with error handling
-const result = asScope(fetchUser(id))
+const result = await asScope(fetchUser(id))
   .let(user => enrichUserData(user))
   .also(user => console.log('Enriched:', user.id))
   .let(user => validateUserPermissions(user))

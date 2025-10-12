@@ -147,7 +147,7 @@ await coroutineScope((scope) => {
           description="Process large datasets efficiently with sequences and flows."
         >
           <CodeBlock
-            code={`import { asSequence } from 'kotlinify-ts/sequence';
+            code={`import { asSequence } from 'kotlinify-ts/sequences';
 
 asSequence(db.streamUsers())
   .filter(user => user.isActive)

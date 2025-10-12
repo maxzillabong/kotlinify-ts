@@ -119,6 +119,57 @@ describe('Deferred', () => {
     const deferred = new Deferred<number>()
     expect(deferred.getCompleted()).toBeUndefined()
   })
+
+  it('getCompleted returns value after completion', () => {
+    const deferred = new Deferred<number>()
+    deferred.completeWith(7)
+    expect(deferred.getCompleted()).toBe(7)
+  })
+
+  it('getCompleted throws stored error', () => {
+    const deferred = new Deferred<number>()
+    const error = new Error('boom')
+    deferred.completeExceptionally(error)
+    deferred.await().catch(() => {})
+    expect(() => deferred.getCompleted()).toThrow(error)
+  })
+
+  it('getCompleted throws on cancellation', () => {
+    const deferred = new Deferred<number>()
+    deferred.cancel()
+    deferred.await().catch(() => {})
+    expect(() => deferred.getCompleted()).toThrow(CancellationError)
+  })
+
+  it('is idempotent - multiple completeWith calls only complete once', async () => {
+    const deferred = new Deferred<number>()
+
+    deferred.completeWith(42)
+    deferred.completeWith(99)
+
+    const value = await deferred.await()
+    expect(value).toBe(42)
+  })
+
+  it('is idempotent - multiple completeExceptionally calls only complete once', async () => {
+    const deferred = new Deferred<number>()
+    const error1 = new Error('first error')
+    const error2 = new Error('second error')
+
+    deferred.completeExceptionally(error1)
+    deferred.completeExceptionally(error2)
+
+    await expect(deferred.await()).rejects.toThrow('first error')
+  })
+
+  it('ignores completion after cancellation', async () => {
+    const deferred = new Deferred<number>()
+
+    deferred.cancel()
+    deferred.completeWith(42)
+
+    await expect(deferred.await()).rejects.toThrow(CancellationError)
+  })
 })
 
 describe('launch', () => {

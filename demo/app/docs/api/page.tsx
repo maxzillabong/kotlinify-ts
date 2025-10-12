@@ -51,7 +51,7 @@ export default function APIReferencePage() {
               href="/docs/sequences"
               className="block p-6 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-slate-600/30 rounded-lg transition-all"
             >
-              <h3 className="text-lg font-semibold text-white mb-2">kotlinify-ts/sequence</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">kotlinify-ts/sequences</h3>
               <p className="text-gray-400 text-sm">Lazy sequences with efficient evaluation</p>
             </Link>
 

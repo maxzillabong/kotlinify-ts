@@ -90,6 +90,9 @@ export class Deferred<T> extends Job {
   private valuePromise: Promise<T>
   private valueResolve!: (value: T) => void
   private valueReject!: (error: Error) => void
+  private _valueCompleted = false
+  private resolvedValue: T | undefined
+  private resolvedError: Error | undefined
 
   constructor() {
     super()
@@ -97,14 +100,31 @@ export class Deferred<T> extends Job {
       this.valueResolve = resolve
       this.valueReject = reject
     })
+
+    this.onCancel(() => {
+      if (!this._valueCompleted) {
+        this._valueCompleted = true
+        const error = new CancellationError()
+        this.resolvedError = error
+        this.valueReject(error)
+      }
+    })
   }
 
   completeWith(value: T): void {
+    if (this._valueCompleted || this.isCancelled) return
+    this._valueCompleted = true
+    this.resolvedValue = value
+    this.resolvedError = undefined
     this.valueResolve(value)
     this.complete()
   }
 
   completeExceptionally(error: Error): void {
+    if (this._valueCompleted || this.isCancelled) return
+    this._valueCompleted = true
+    this.resolvedError = error
+    this.resolvedValue = undefined
     this.valueReject(error)
     this.fail(error)
   }
@@ -114,14 +134,13 @@ export class Deferred<T> extends Job {
   }
 
   getCompleted(): T | undefined {
-    if (!this.isCompleted) return undefined
-    try {
-      let result: T | undefined
-      this.valuePromise.then(value => { result = value })
-      return result
-    } catch {
-      return undefined
+    if (!this._valueCompleted) return undefined
+
+    if (this.resolvedError) {
+      throw this.resolvedError
     }
+
+    return this.resolvedValue
   }
 }
 

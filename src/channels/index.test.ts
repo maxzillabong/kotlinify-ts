@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { Channel, RENDEZVOUS, UNLIMITED, CONFLATED } from './index'
+import { Channel, RENDEZVOUS, UNLIMITED, CONFLATED, ticker } from './index'
 
 describe('Channel', () => {
   describe('basic operations', () => {
@@ -13,6 +13,16 @@ describe('Channel', () => {
       await sendPromise
 
       expect(received).toBe(42)
+    })
+
+    it('delivers values when send happens before receive', async () => {
+      const ch = new Channel<number>(RENDEZVOUS)
+
+      const sendPromise = ch.send(99)
+      const received = await ch.receive()
+      await sendPromise
+
+      expect(received).toBe(99)
     })
 
     it('buffered channel stores values', async () => {
@@ -223,6 +233,21 @@ describe('Channel', () => {
       }
 
       expect(values).toEqual([1, 2])
+    })
+  })
+
+  describe('ticker', () => {
+    it('emits multiple ticks until closed', async () => {
+      const ch = ticker(5, 0)
+      const iterator = ch[Symbol.asyncIterator]()
+
+      const first = await iterator.next()
+      const second = await iterator.next()
+
+      ch.close()
+
+      expect(first.value).toBe(0)
+      expect(second.value).toBe(1)
     })
   })
 })

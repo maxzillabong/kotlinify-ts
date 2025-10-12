@@ -9,6 +9,18 @@ export type FlowBlock<T> = (collector: FlowCollector<T>) => Promise<void>
 export class Flow<T> {
   constructor(protected block: FlowBlock<T>) {}
 
+  static from<T>(values: T[]): Flow<T> {
+    return new Flow(async (collector) => {
+      for (const value of values) {
+        await collector.emit(value)
+      }
+    })
+  }
+
+  static empty<T>(): Flow<T> {
+    return new Flow(async () => {})
+  }
+
   async collect(collector: ((value: T) => void | Promise<void>) | FlowCollector<T>): Promise<void> {
     const flowCollector: FlowCollector<T> =
       typeof collector === 'function'

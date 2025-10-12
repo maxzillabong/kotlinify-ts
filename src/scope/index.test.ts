@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { letValue, apply, also, run, withValue, letOrNull, applyOrNull, alsoOrNull, runOrNull } from './index'
+import { asScope, letValue, apply, also, run, withValue, letOrNull, applyOrNull, alsoOrNull, runOrNull } from './index'
 
 describe('Scope Functions', () => {
   describe('let', () => {
@@ -191,6 +191,28 @@ describe('Scope Functions', () => {
 
     it.skip('handles null in chain gracefully', () => {
       // Prototype-based helpers disabled in tests.
+    })
+  })
+
+  describe('async scope chains', () => {
+    it('resolves promised values before chaining', async () => {
+      const result = await asScope(Promise.resolve({ count: 5 }))
+        .let(({ count }) => count)
+        .let(value => value + 1)
+        .value()
+
+      expect(result).toBe(6)
+    })
+
+    it('supports async transform blocks', async () => {
+      const result = await asScope(Promise.resolve(10))
+        .let(async value => value * 2)
+        .apply(async value => {
+          await Promise.resolve(value)
+        })
+        .value()
+
+      expect(result).toBe(20)
     })
   })
 })

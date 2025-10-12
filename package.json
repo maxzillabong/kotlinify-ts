@@ -34,6 +34,11 @@
       "import": "./dist/coroutines.mjs",
       "require": "./dist/coroutines.js"
     },
+    "./channels": {
+      "types": "./dist/channels.d.ts",
+      "import": "./dist/channels.mjs",
+      "require": "./dist/channels.js"
+    },
     "./sequences": {
       "types": "./dist/sequences.d.ts",
       "import": "./dist/sequences.mjs",
