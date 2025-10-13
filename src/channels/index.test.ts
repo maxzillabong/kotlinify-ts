@@ -35,6 +35,16 @@ describe('Channel', () => {
       expect(await ch.receive()).toBe(2)
     })
 
+    it('delivers undefined values from buffer', async () => {
+      const ch = new Channel<number | undefined>(2)
+
+      await ch.send(undefined)
+      await ch.send(1)
+
+      expect(await ch.receive()).toBeUndefined()
+      expect(await ch.receive()).toBe(1)
+    })
+
     it('unlimited channel never blocks send', async () => {
       const ch = new Channel<number>(UNLIMITED)
 
@@ -115,13 +125,13 @@ describe('Channel', () => {
       await expect(receivePromise).rejects.toThrow('Channel is closed for receive')
     })
 
-    it('cancel resolves pending senders', async () => {
+    it('cancel rejects pending senders', async () => {
       const ch = new Channel<number>(RENDEZVOUS)
 
       const sendPromise = ch.send(42)
       ch.cancel()
 
-      await expect(sendPromise).resolves.toBeUndefined()
+      await expect(sendPromise).rejects.toThrow('Channel was cancelled')
     })
 
     it('cancel prevents new sends', async () => {
@@ -158,7 +168,7 @@ describe('Channel', () => {
 
       setTimeout(() => ch.cancel(), 10)
 
-      await expect(sendPromise).resolves.toBeUndefined()
+      await expect(sendPromise).rejects.toThrow('Channel was cancelled')
     })
 
     it('close while multiple receives are waiting', async () => {
@@ -184,9 +194,9 @@ describe('Channel', () => {
 
       ch.cancel()
 
-      await expect(send1).resolves.toBeUndefined()
-      await expect(send2).resolves.toBeUndefined()
-      await expect(send3).resolves.toBeUndefined()
+      await expect(send1).rejects.toThrow('Channel was cancelled')
+      await expect(send2).rejects.toThrow('Channel was cancelled')
+      await expect(send3).rejects.toThrow('Channel was cancelled')
     })
 
     it('send and receive race correctly', async () => {

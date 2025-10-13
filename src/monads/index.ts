@@ -12,7 +12,7 @@ export abstract class Option<T> {
   }
 
   map<U>(fn: (value: T) => U): Option<U> {
-    return this.isSome ? Some((fn as any)(this.get())) : None()
+    return this.isSome ? Some(fn(this.get())) : None()
   }
 
   flatMap<U>(fn: (value: T) => Option<U>): Option<U> {
@@ -154,15 +154,15 @@ export abstract class Either<L, R> {
   abstract getOrElse(defaultValue: R | (() => R)): R
 
   map<U>(fn: (value: R) => U): Either<L, U> {
-    return this.isRight ? Right(fn(this.getRight())) : (this as any)
+    return this.isRight ? Right(fn(this.getRight())) : Left(this.getLeft())
   }
 
   mapLeft<U>(fn: (value: L) => U): Either<U, R> {
-    return this.isLeft ? Left(fn(this.getLeft())) : (this as any)
+    return this.isLeft ? Left(fn(this.getLeft())) : Right(this.getRight())
   }
 
   flatMap<U>(fn: (value: R) => Either<L, U>): Either<L, U> {
-    return this.isRight ? fn(this.getRight()) : (this as any)
+    return this.isRight ? fn(this.getRight()) : Left(this.getLeft())
   }
 
   fold<U>(ifLeft: (left: L) => U, ifRight: (right: R) => U): U {
@@ -293,15 +293,15 @@ export abstract class Result<T, E = Error> {
   }
 
   map<U>(fn: (value: T) => U): Result<U, E> {
-    return this.isSuccess ? Success(fn(this.get())) : (this as any)
+    return this.isSuccess ? Success(fn(this.get())) : Failure(this.getError())
   }
 
   mapError<F>(fn: (error: E) => F): Result<T, F> {
-    return this.isFailure ? Failure(fn(this.getError())) : (this as any)
+    return this.isFailure ? Failure(fn(this.getError())) : Success(this.get())
   }
 
   flatMap<U>(fn: (value: T) => Result<U, E>): Result<U, E> {
-    return this.isSuccess ? fn(this.get()) : (this as any)
+    return this.isSuccess ? fn(this.get()) : Failure(this.getError())
   }
 
   fold<U>(onFailure: (error: E) => U, onSuccess: (value: T) => U): U {
@@ -421,6 +421,8 @@ export function Failure<T = never, E = Error>(error: E): Result<T, E> {
   return new FailureImpl(error)
 }
 
+export function tryCatch<T>(fn: () => T): Result<T, Error>
+export function tryCatch<T, E>(fn: () => T, onError: (error: unknown) => E): Result<T, E>
 export function tryCatch<T, E = Error>(
   fn: () => T,
   onError?: (error: unknown) => E
@@ -428,10 +430,16 @@ export function tryCatch<T, E = Error>(
   try {
     return Success(fn())
   } catch (error) {
-    return Failure(onError ? onError(error) : (error as E))
+    if (onError) {
+      return Failure(onError(error))
+    }
+    const err = error instanceof Error ? error : new Error(String(error))
+    return Failure(err as E)
   }
 }
 
+export async function tryCatchAsync<T>(fn: () => T | Promise<T>): Promise<Result<T, Error>>
+export async function tryCatchAsync<T, E>(fn: () => T | Promise<T>, onError: (error: unknown) => E): Promise<Result<T, E>>
 export async function tryCatchAsync<T, E = Error>(
   fn: () => T | Promise<T>,
   onError?: (error: unknown) => E
@@ -439,7 +447,11 @@ export async function tryCatchAsync<T, E = Error>(
   try {
     return Success(await Promise.resolve(fn()))
   } catch (error) {
-    return Failure(onError ? onError(error) : (error as E))
+    if (onError) {
+      return Failure(onError(error))
+    }
+    const err = error instanceof Error ? error : new Error(String(error))
+    return Failure(err as E)
   }
 }
 

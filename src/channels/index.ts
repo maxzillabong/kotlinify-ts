@@ -21,7 +21,7 @@ export interface ReceiveChannel<T> extends AsyncIterable<T> {
 export class Channel<T> implements SendChannel<T>, ReceiveChannel<T> {
   private queue: T[] = []
   private receivers: Array<(value: T | typeof CLOSED) => void> = []
-  private senders: Array<{ value: T; resolve: () => void }> = []
+  private senders: Array<{ value: T; resolve: () => void; reject: (error: Error) => void }> = []
   private _closed = false
   private _cancelled = false
   private capacity: number
@@ -35,14 +35,9 @@ export class Channel<T> implements SendChannel<T>, ReceiveChannel<T> {
       throw new Error('Channel is closed for send')
     }
 
-    if (this.receivers.length > 0) {
-      const receiver = this.receivers.shift()!
+    const receiver = this.receivers.shift()
+    if (receiver) {
       receiver(value)
-      return
-    }
-
-    if (this.capacity === UNLIMITED || this.queue.length < this.capacity) {
-      this.queue.push(value)
       return
     }
 
@@ -51,30 +46,39 @@ export class Channel<T> implements SendChannel<T>, ReceiveChannel<T> {
       return
     }
 
-    return new Promise((resolve) => {
-      this.senders.push({ value, resolve })
+    if (this.capacity === UNLIMITED || this.queue.length < this.capacity) {
+      this.queue.push(value)
+      return
+    }
+
+    return new Promise((resolve, reject) => {
+      if (this._closed || this._cancelled) {
+        reject(new Error('Channel closed while waiting'))
+        return
+      }
+      this.senders.push({ value, resolve, reject })
     })
   }
 
   async receive(): Promise<T> {
     if (this.queue.length > 0) {
-      const value = this.queue.shift()!
-      if (this.senders.length > 0) {
-        const { value: senderValue, resolve } = this.senders.shift()!
+      const queueValue = this.queue.shift()!
+      const sender = this.senders.shift()
+      if (sender) {
         if (this.capacity === CONFLATED) {
-          this.queue = [senderValue]
+          this.queue = [sender.value]
         } else {
-          this.queue.push(senderValue)
+          this.queue.push(sender.value)
         }
-        resolve()
+        sender.resolve()
       }
-      return value
+      return queueValue
     }
 
-    if (this.senders.length > 0) {
-      const { value, resolve } = this.senders.shift()!
-      resolve()
-      return value
+    const sender = this.senders.shift()
+    if (sender) {
+      sender.resolve()
+      return sender.value
     }
 
     if (this._closed) {
@@ -110,6 +114,10 @@ export class Channel<T> implements SendChannel<T>, ReceiveChannel<T> {
     this._closed = true
     this.receivers.forEach((r) => r(CLOSED))
     this.receivers = []
+    this.senders.forEach(({ reject }) => {
+      reject(new Error('Channel was closed'))
+    })
+    this.senders = []
   }
 
   cancel(_?: string): void {
@@ -118,7 +126,9 @@ export class Channel<T> implements SendChannel<T>, ReceiveChannel<T> {
     this._closed = true
     this.receivers.forEach((r) => r(CLOSED))
     this.receivers = []
-    this.senders.forEach(({ resolve }) => resolve())
+    this.senders.forEach(({ reject }) => {
+      reject(new CancellationError('Channel was cancelled'))
+    })
     this.senders = []
   }
 
@@ -204,22 +214,41 @@ export async function consumeEach<T>(
 }
 
 export function ticker(delayMs: number, initialDelayMs: number = delayMs): ReceiveChannel<number> {
-  const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, Math.max(0, ms)))
+  const channel = new Channel<number>(0)
+  let timeoutId: any
+  let stopped = false
 
-  return produce(async (channel) => {
-    let tick = 0
+  const tick = async (n: number) => {
+    if (stopped || channel.isClosedForSend) {
+      return
+    }
 
     try {
-      await wait(initialDelayMs)
-
-      while (true) {
-        await channel.send(tick++)
-        await wait(delayMs)
+      await channel.send(n)
+      if (!stopped) {
+        timeoutId = setTimeout(() => tick(n + 1), delayMs)
       }
     } catch (error) {
-      if (!(error instanceof Error) || error.message !== 'Channel is closed for send') {
-        throw error
-      }
+      stopped = true
+      if (timeoutId) clearTimeout(timeoutId)
     }
-  })
+  }
+
+  timeoutId = setTimeout(() => tick(0), initialDelayMs)
+
+  const originalClose = channel.close.bind(channel)
+  channel.close = () => {
+    stopped = true
+    if (timeoutId) clearTimeout(timeoutId)
+    originalClose()
+  }
+
+  const originalCancel = channel.cancel.bind(channel)
+  channel.cancel = (reason?: string) => {
+    stopped = true
+    if (timeoutId) clearTimeout(timeoutId)
+    originalCancel(reason)
+  }
+
+  return channel
 }

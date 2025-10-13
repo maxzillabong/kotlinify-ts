@@ -161,13 +161,14 @@ export class CoroutineScope {
     this.job.addChild(childJob)
     this.childJobs.push(childJob)
 
-    try {
-      Promise.resolve(block.call(childJob))
-        .then(() => childJob.complete())
-        .catch((error) => childJob.fail(error instanceof Error ? error : new Error(String(error))))
-    } catch (error) {
-      childJob.fail(error as Error)
-    }
+    ;(async () => {
+      try {
+        await block.call(childJob)
+        childJob.complete()
+      } catch (error) {
+        childJob.fail(error instanceof Error ? error : new Error(String(error)))
+      }
+    })()
 
     return childJob
   }
@@ -177,10 +178,16 @@ export class CoroutineScope {
     this.job.addChild(deferred)
     this.childJobs.push(deferred)
 
-    Promise.resolve()
-      .then(() => Promise.resolve(block()))
-      .then((value) => deferred.completeWith(value))
-      .catch((error) => deferred.completeExceptionally(error))
+    ;(async () => {
+      try {
+        const result = await block()
+        deferred.completeWith(result)
+      } catch (error) {
+        deferred.completeExceptionally(
+          error instanceof Error ? error : new Error(String(error))
+        )
+      }
+    })()
 
     return deferred
   }
@@ -193,10 +200,14 @@ export class CoroutineScope {
 export function launch(block: (this: Job) => void | Promise<void>): Job {
   const job = new Job()
 
-  Promise.resolve()
-    .then(() => Promise.resolve(block.call(job)))
-    .then(() => job.complete())
-    .catch((error) => job.fail(error))
+  ;(async () => {
+    try {
+      await block.call(job)
+      job.complete()
+    } catch (error) {
+      job.fail(error instanceof Error ? error : new Error(String(error)))
+    }
+  })()
 
   return job
 }
@@ -204,10 +215,16 @@ export function launch(block: (this: Job) => void | Promise<void>): Job {
 export function asyncValue<T>(block: () => T | Promise<T>): Deferred<T> {
   const deferred = new Deferred<T>()
 
-  Promise.resolve()
-    .then(() => Promise.resolve(block()))
-    .then((value) => deferred.completeWith(value))
-    .catch((error) => deferred.completeExceptionally(error))
+  ;(async () => {
+    try {
+      const result = await block()
+      deferred.completeWith(result)
+    } catch (error) {
+      deferred.completeExceptionally(
+        error instanceof Error ? error : new Error(String(error))
+      )
+    }
+  })()
 
   return deferred
 }
@@ -251,7 +268,25 @@ export async function supervisorScope<T>(
   block: (scope: CoroutineScope) => T | Promise<T>
 ): Promise<T> {
   const scope = new CoroutineScope()
-  return Promise.resolve(block(scope))
+  const childJobs: Job[] = []
+
+  const originalLaunch = scope.launch.bind(scope)
+  scope.launch = (childBlock: (this: Job) => void | Promise<void>) => {
+    const job = originalLaunch(childBlock)
+    childJobs.push(job)
+    return job
+  }
+
+  try {
+    const result = await Promise.resolve(block(scope))
+    await Promise.allSettled(childJobs.map(job => job.join().catch(() => {})))
+    return result
+  } catch (error) {
+    await Promise.allSettled(childJobs.map(job => job.join().catch(() => {})))
+    throw error
+  } finally {
+    scope.cancel()
+  }
 }
 
 export async function withTimeout<T>(

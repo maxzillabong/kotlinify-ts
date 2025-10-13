@@ -58,18 +58,48 @@ export class Flow<T> {
   take(count: number): Flow<T> {
     return new Flow(async (collector) => {
       let taken = 0
+      let completed = false
+
+      const earlyReturn = Symbol('EARLY_RETURN')
+
       try {
         await this.collect(async (value) => {
+          if (completed) return
           if (taken < count) {
             await collector.emit(value)
             taken++
             if (taken >= count) {
-              throw new CancellationError('FLOW_TAKE_COMPLETED')
+              completed = true
+              throw earlyReturn
             }
           }
         })
       } catch (error) {
-        if (error instanceof CancellationError && error.message === 'FLOW_TAKE_COMPLETED') {
+        if (error === earlyReturn) {
+          return
+        }
+        throw error
+      }
+    })
+  }
+
+  takeWhile(predicate: (value: T) => boolean | Promise<boolean>): Flow<T> {
+    return new Flow(async (collector) => {
+      let completed = false
+      const earlyReturn = Symbol('EARLY_RETURN')
+
+      try {
+        await this.collect(async (value) => {
+          if (completed) return
+          if (await predicate(value)) {
+            await collector.emit(value)
+          } else {
+            completed = true
+            throw earlyReturn
+          }
+        })
+      } catch (error) {
+        if (error === earlyReturn) {
           return
         }
         throw error
