@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/maxzillabong/kotlinify-ts/compare/v1.1.1...v1.2.0) (2025-10-13)
+
+
+### Features
+
+* add sequence benchmark and tighten async primitives ([bf10acf](https://github.com/maxzillabong/kotlinify-ts/commit/bf10acf9d803b4a7e2cc38965c72c8cafc540120))
+
 ## [1.1.1](https://github.com/maxzillabong/kotlinify-ts/compare/v1.1.0...v1.1.1) (2025-10-12)
 
 
